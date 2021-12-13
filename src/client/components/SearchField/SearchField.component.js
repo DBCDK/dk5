@@ -239,6 +239,7 @@ export class SearchFieldComponent extends Component {
         className="search-field--container"
         onSubmit={this.queryWasSubmitted}
       >
+        <div>Mandag d. 13/12: Servicen er ude af drift. Vi forventer at problemerne er løst i løbet af dagen</div>
         <div className="search-field--title">
           <label htmlFor="search"><h2>Find hylden med bøger om ...</h2></label>
         </div>
