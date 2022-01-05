@@ -207,7 +207,7 @@ export class HelpContainerComponent extends Component {
             <div className="bullet">0</div>Digte. Antologier
             <div className="note">
                (0 udelades ikke, selv om det er sidste ciffer).
-               Vise- og sangb&oslash;ger s&aelig;ttes i 78.69 eller 79.7.
+               Vise- og sangb&oslash;ger s&aelig;ttes i 78.69 eller 78.7.
             </div>
           </div>
           <div>
