@@ -1,6 +1,8 @@
 #!groovy​
 @Library('pu-deploy')_
 
+def DOCKER_REPO_DBC = "docker-dbc.artifacts.dbccloud.dk"
+
 properties([
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')),
         pipelineTriggers([]),
@@ -12,7 +14,7 @@ def FILE = "dk5_total.iso2709"
 pipeline {
     agent {
         docker {
-            image "docker.dbc.dk/dbc-libv3-env:latest"
+            image "${DOCKER_REPO_DBC}/dbc-libv3-env:latest"
             label 'devel10-head'
         }
     }
@@ -20,7 +22,7 @@ pipeline {
         cron("H 5 * * *")
     }
     environment {
-        ARTIFACTORY_FE_GENERIC = "https://artifactory.dbc.dk/artifactory/fe-generic/dk5/"
+        ARTIFACTORY_FE_GENERIC = "https://artifactory.dbccloud.dk/artifactory/fe-generic/dk5/"
         ARTIFACTORY_LOGIN = credentials("artifactory_login")
         TANTER_LOGIN = credentials("tanter_login")
     }

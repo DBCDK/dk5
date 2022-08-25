@@ -1,4 +1,4 @@
-ARG BASEIMAGE=docker.dbc.dk/dbc-jessie:latest
+ARG BASEIMAGE=docker-dbc.artifacts.dbccloud.dk/dbc-jessie:latest
 # ---- Base Node ----
 FROM  $BASEIMAGE AS build
 
