@@ -1,4 +1,4 @@
-ARG BASEIMAGE=docker-dbc.artifacts.dbccloud.dk/dbc-java8:master
+ARG BASEIMAGE=docker-dbc.artifacts.dbccloud.dk/dbc-java8:latest
 # ---- Base Node ----
 FROM  $BASEIMAGE AS build
 
