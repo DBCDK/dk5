@@ -1,7 +1,7 @@
 #!groovy​
 @Library('pu-deploy')_
 
-def DOCKER_REPO_DBC = "docker-dbc.artifacts.dbccloud.dk"
+def DOCKER_REPO = "docker-fbiscrum.artifacts.dbccloud.dk"
 
 properties([
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')),
@@ -14,7 +14,7 @@ def FILE = "dk5_total.iso2709"
 pipeline {
     agent {
         docker {
-            image "${DOCKER_REPO_DBC}/dbc-libv3-env:latest"
+            image "${DOCKER_REPO}/dbc-libv3-env:latest"
             label 'devel10-head'
         }
     }
