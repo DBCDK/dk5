@@ -1,7 +1,7 @@
 #!groovy​
 @Library('pu-deploy')_
 
-def dockerRepoDbc = "docker-dbc.artifacts.dbccloud.dk"
+def DOCKER_REPO_DBC = "docker-dbc.artifacts.dbccloud.dk"
 
 properties([
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')),
@@ -15,7 +15,7 @@ def OUTPUTFILE = "elastic_bulk_load.json"
 pipeline {
     agent {
         docker {
-            image "${dockerRepoDbc}/dbc-node:latest"
+            image "${DOCKER_REPO_DBC}/dbc-node:latest"
             label "devel10-head"
             args  "-v /home/isworker:/home/isworker"
         }
