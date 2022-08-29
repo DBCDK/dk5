@@ -18,8 +18,8 @@
  *
  * Empty subfields and subfields containing a single , or . are ignored.
  *
- * Records are dumped from the libv3 system like:
- *   NLS_LANG=AMERICAN_DENMARK.WE8ISO8859P1 ; dump_v3 <user>/<password>@<some.db>.dbc.dk | marcunicode > dk5_total.iso2709
+ * Records are dumped from cisterne with rrdump like:
+ *   rrdump -f ISO -a 190007 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o dk5_total_iso2709
  *
  * And converted like:
  *   iso2709ToElasticLoad -i dk5_total.iso2709 -o elastic_bulk_load.json
