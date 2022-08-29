@@ -32,8 +32,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        rrdump -f ISO -a 190007 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o ${FILE}
-                        export NLS_LANG=AMERICAN_DENMARK.WE8ISO8859P1; dump_v3 ${TANTER_LOGIN} | marcunicode >${FILE}
+                        .rrdump/bin/rrdump.sh -f ISO -a 190007 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o ${FILE}
                     """
                 }
             }
