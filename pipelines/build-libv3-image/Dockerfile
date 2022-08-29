@@ -9,7 +9,8 @@ RUN apt-install \
     bifappl-dbc-2013-5 \
     marctool-dbc-2013-5 \
     libicu-dev \
-    unzip
+    unzip \
+    java
 
 # fetch rrdump
 RUN curl -sL http://mavenrepo.dbc.dk/content/repositories/releases/dk/dbc/rawrepo-dump-tool/1.0.7/rawrepo-dump-tool-1.0.7.jar -o rrdump.jar && unzip -op rrdump.jar rrdump.sh | bash -s -- --install
