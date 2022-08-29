@@ -5,10 +5,6 @@ FROM  $BASEIMAGE AS build
 # Install curl, marcunicode, dump_v3, marctool, unicode library packages
 RUN apt-install \
     curl \
-    marcunicode-dbc-2013-5 \
-    bifappl-dbc-2013-5 \
-    marctool-dbc-2013-5 \
-    libicu-dev \
     unzip
 
 # fetch rrdump
