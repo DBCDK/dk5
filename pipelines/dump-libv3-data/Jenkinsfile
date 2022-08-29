@@ -32,8 +32,6 @@ pipeline {
             steps {
                 script {
                     sh """
-                        pwd
-                        ls -la /root
                         /root/.rrdump/bin/rrdump.sh -f ISO -a 190007 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o ${FILE}
                     """
                 }
