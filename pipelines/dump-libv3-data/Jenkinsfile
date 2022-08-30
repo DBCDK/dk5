@@ -22,7 +22,7 @@ pipeline {
         cron("H 5 * * *")
     }
     environment {
-        ARTIFACTORY_FE_GENERIC = "https://artifactory.dbccloud.dk/artifactory/fe-generic/dk5/"
+        ARTIFACTORY_DK5_DATA = "https://artifactory.dbccloud.dk/artifactory/docker-fbiscrum/dk5-data/"
         ARTIFACTORY_LOGIN = credentials("artifactory_login")
         TANTER_LOGIN = credentials("tanter_login")
     }
@@ -47,8 +47,8 @@ pipeline {
                 script {
                     sh "echo archive ${FILE}"
                     archiveArtifacts "${FILE}"
-                    sh "echo push to ${ARTIFACTORY_FE_GENERIC}${FILE}"
-                    sh "curl -k -u ${ARTIFACTORY_LOGIN} -T ${FILE} ${ARTIFACTORY_FE_GENERIC}${FILE}"
+                    sh "echo push to ${ARTIFACTORY_DK5_DATA}${FILE}"
+                    sh "curl -k -u ${ARTIFACTORY_LOGIN} -T ${FILE} ${ARTIFACTORY_DK5_DATA}${FILE}"
                 }
             }
         }
@@ -69,7 +69,7 @@ pipeline {
                 if ("${env.BRANCH_NAME}" == 'master') {
                     slackSend(channel: 'fe-drift',
                             color: 'good',
-                            message: "${env.JOB_NAME} #${env.BUILD_NUMBER} completed, and pushed ${FILE} to ${ARTIFACTORY_FE_GENERIC}",
+                            message: "${env.JOB_NAME} #${env.BUILD_NUMBER} completed, and pushed ${FILE} to ${ARTIFACTORY_DK5_DATA}",
                             tokenCredentialId: 'slack-global-integration-token')
                 }
             }

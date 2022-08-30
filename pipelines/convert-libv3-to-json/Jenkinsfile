@@ -25,7 +25,7 @@ pipeline {
                 threshold: hudson.model.Result.SUCCESS)
     }
     environment {
-        ARTIFACTORY_FE_GENERIC = "https://artifactory.dbccloud.dk/artifactory/fe-generic/dk5/"
+        ARTIFACTORY_DK5_DATA = "https://artifactory.dbccloud.dk/artifactory/docker-fbiscrum/dk5-data/"
         ARTIFACTORY_LOGIN = credentials("artifactory_login")
         TANTER_LOGIN = credentials("tanter_login")
     }
@@ -38,7 +38,7 @@ pipeline {
                         pwd
                         ls -l
                         head dk5_total.iso2709
-                        curl ${ARTIFACTORY_FE_GENERIC}${INPUTFILE} >${INPUTFILE}
+                        curl ${ARTIFACTORY_DK5_DATA}${INPUTFILE} >${INPUTFILE}
                         ls -l
                         head dk5_total.iso2709
                         npm install
@@ -55,8 +55,8 @@ pipeline {
                 script {
                     sh "echo archive ${OUTPUTFILE}"
                     archiveArtifacts "${OUTPUTFILE}"
-                    sh "echo push to ${ARTIFACTORY_FE_GENERIC}${OUTPUTFILE}"
-                    sh "curl -k -u ${ARTIFACTORY_LOGIN} -T ${OUTPUTFILE} ${ARTIFACTORY_FE_GENERIC}${OUTPUTFILE}"
+                    sh "echo push to ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE}"
+                    sh "curl -k -u ${ARTIFACTORY_LOGIN} -T ${OUTPUTFILE} ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE}"
                 }
             }
         }
@@ -77,7 +77,7 @@ pipeline {
                 if ("${env.BRANCH_NAME}" == 'master') {
                     slackSend(channel: 'fe-drift',
                             color: 'good',
-                            message: "${env.JOB_NAME} #${env.BUILD_NUMBER} completed, and pushed ${OUTPUTFILE} to ${ARTIFACTORY_FE_GENERIC}",
+                            message: "${env.JOB_NAME} #${env.BUILD_NUMBER} completed, and pushed ${OUTPUTFILE} to ${ARTIFACTORY_DK5_DATA}",
                             tokenCredentialId: 'slack-global-integration-token')
                 }
             }
