@@ -33,7 +33,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        $HOME/.rrdump/bin/rrdump.sh -m EXPANDED -f ISO -a 190007 -e DANMARC2 -u ${RAW_REPO} -o ${FILE}
+                        $HOME/.rrdump/bin/rrdump.sh -m EXPANDED -f ISO -a 190007 -e UTF-8 -u ${RAW_REPO} -o ${FILE}
                     """
                 }
             }
