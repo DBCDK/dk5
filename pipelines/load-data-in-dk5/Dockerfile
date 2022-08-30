@@ -2,7 +2,7 @@ ARG BASEIMAGE=docker-fbiscrum.artifacts.dbccloud.dk/dk5:latest
 # ---- Base Node ----
 FROM  $BASEIMAGE AS build
 ## retrieve data from artifactory
-RUN curl -O https://artifactory.dbccloud.dk/artifactory/fe-generic/dk5/elastic_bulk_load.json
+RUN curl -O https://artifactory.dbccloud.dk/artifactory/docker-fbiscrum/dk5-data/elastic_bulk_load.json
 ## Load data into elasticsearch
 RUN service elasticsearch start && \
     ./checkElasticsearch.sh && \
