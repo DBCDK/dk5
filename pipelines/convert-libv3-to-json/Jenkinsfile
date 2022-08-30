@@ -36,8 +36,9 @@ pipeline {
                 script {
                     sh """
                         pwd
-                        ls
+                        ls -l
                         curl ${ARTIFACTORY_FE_GENERIC}${INPUTFILE} >${INPUTFILE}
+                        ls -l
                         npm install
                         src/iso2709ToElasticLoad -i ${INPUTFILE} -o ${OUTPUTFILE}
                     """
