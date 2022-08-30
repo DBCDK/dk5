@@ -32,7 +32,9 @@ pipeline {
             steps {
                 script {
                     sh """
-                        /root/.rrdump/bin/rrdump.sh -f ISO -a 190007 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o ${FILE}
+                        cp -R /root/.rrdump $HOME/
+                        mv $HOME/.rrdump/archive/rrdump-1*.jar $HOME/.rrdump/archive/rrdump-current.jar
+                        $HOME/.rrdump/bin/rrdump.sh -f ISO -a 190007 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o ${FILE}
                     """
                 }
             }
