@@ -37,8 +37,10 @@ pipeline {
                     sh """
                         pwd
                         ls -l
+                        head dk5_total.iso2709
                         curl ${ARTIFACTORY_FE_GENERIC}${INPUTFILE} >${INPUTFILE}
                         ls -l
+                        head dk5_total.iso2709
                         npm install
                         src/iso2709ToElasticLoad -i ${INPUTFILE} -o ${OUTPUTFILE}
                     """
