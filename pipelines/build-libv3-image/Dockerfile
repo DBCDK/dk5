@@ -9,5 +9,3 @@ RUN apt-install \
 
 # fetch rrdump
 RUN curl -sL http://mavenrepo.dbc.dk/content/repositories/releases/dk/dbc/rawrepo-dump-tool/1.0.7/rawrepo-dump-tool-1.0.7.jar -o rrdump.jar && unzip -op rrdump.jar rrdump.sh | bash -s -- --install
-
-RUN pwd && ls -la /root/.rrdump && ls -la /root/.rrdump/bin && chmod -R 777 /root

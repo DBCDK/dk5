@@ -14,7 +14,7 @@ def FILE = "dk5_total.iso2709"
 pipeline {
     agent {
         docker {
-            image "${DOCKER_REPO}/dbc-libv3-env:latest"
+            image "${DOCKER_REPO}/dbc-broend-env:latest"
             label 'devel10-head'
         }
     }
@@ -25,6 +25,7 @@ pipeline {
         ARTIFACTORY_DK5_DATA = "https://artifactory.dbccloud.dk/artifactory/docker-fbiscrum/dk5-data/"
         ARTIFACTORY_LOGIN = credentials("artifactory_login")
         TANTER_LOGIN = credentials("tanter_login")
+        RAW_REPO = "http://rawrepo-record-service.basismig.svc.cloud.dbc.dk"
     }
 
     stages {
@@ -32,9 +33,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        cp -R /root/.rrdump $HOME/
-                        mv $HOME/.rrdump/archive/rrdump-1*.jar $HOME/.rrdump/archive/rrdump-current.jar
-                        $HOME/.rrdump/bin/rrdump.sh -f ISO -a 190007 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o ${FILE}
+                        $HOME/.rrdump/bin/rrdump.sh -m EXPANDED -f ISO -a 190007 -e DANMARC2 -u ${RAW_REPO} -o ${FILE}
                     """
                 }
             }
