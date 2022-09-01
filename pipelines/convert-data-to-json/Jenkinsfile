@@ -37,6 +37,9 @@ pipeline {
                 script {
                     sh """
                         curl ${ARTIFACTORY_DK5_DATA}${INPUTFILE} >${INPUTFILE}
+                        nvm --version
+                        npm --version
+                        node --version
                         npm install
                         src/iso2709ToElasticLoad -i ${INPUTFILE} -o ${OUTPUTFILE}
                     """
