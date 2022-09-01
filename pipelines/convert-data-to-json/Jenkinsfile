@@ -38,7 +38,7 @@ pipeline {
                     sh """
                         pwd
                         ls -l
-                        head dk5_total.iso2709
+                        head ${INPUTFILE}
                         curl ${ARTIFACTORY_DK5_DATA}${INPUTFILE} >${INPUTFILE}
                         ls -l
                         head dk5_total.iso2709
