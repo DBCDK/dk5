@@ -18,8 +18,8 @@
  *
  * Empty subfields and subfields containing a single , or . are ignored.
  *
- * Records are dumped from the libv3 system like:
- *   NLS_LANG=AMERICAN_DENMARK.WE8ISO8859P1 ; dump_v3 <user>/<password>@<some.db>.dbc.dk | marcunicode > dk5_total.iso2709
+ * Records are dumped from cisterne with rrdump like:
+ *   rrdump -f ISO -a 190007 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o dk5_total_iso2709
  *
  * And converted like:
  *   iso2709ToElasticLoad -i dk5_total.iso2709 -o elastic_bulk_load.json
@@ -106,7 +106,7 @@ function createDk5Tab() {
   const dk5s = {};
   const regs = {};
   dk5Buf.forEach(function (dk5) {
-    let bibKat = dk5['d09a'] ? dk5['d09a'][0].substr(0, 3) : 'NUL';
+    let bibKat = dk5['d09z'] ? dk5['d09z'][0].substr(0, 3) : 'NUL';
     const number = Array.isArray(dk5['652m']) ? dk5['652m'][0] : (Array.isArray(dk5['652n']) ? dk5['652n'][0] : '');
     if (bibKat === 'DK5') {   // only for systematic
       const text = Array.isArray(dk5['652u']) ? dk5['652u'][0] : '';
@@ -146,8 +146,8 @@ function dumpRecords() {
       if (dk5['652x'] && dk5['652x'][0] === '2') {
         closed++;
       }
-      const d09aStem = dk5['d09a'] ? dk5['d09a'][0].substr(0, 3) : 'NUL';
-      const bibKat = bibKatMap[d09aStem] ? d09aStem : 'NUL';
+      const d09zStem = dk5['d09z'] ? dk5['d09z'][0].substr(0, 3) : 'NUL';
+      const bibKat = bibKatMap[d09zStem] ? d09zStem : 'NUL';
       let number = '';
       ['652m', '652n', '652d'].forEach((subf) => {
         if (!number && Array.isArray(dk5[subf])) {

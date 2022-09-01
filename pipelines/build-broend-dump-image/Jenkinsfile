@@ -7,12 +7,13 @@ properties([
 ])
 
 def PRODUCT = "dbc-broend-env"
-def CONTAINER_NAME = "${PRODUCT}-${BRANCH_NAME}"
-if ("$BRANCH_NAME" == "master") {
+def BRANCH = BRANCH_NAME.toLowerCase().replaceAll(/[\/._ ]/, "-")
+def CONTAINER_NAME = "${PRODUCT}-${BRANCH}"
+if ("$BRANCH" == "master") {
     CONTAINER_NAME = "$PRODUCT"
 }
-def BUILD_NAME = "$PRODUCT :: $BRANCH_NAME"
-def DOCKER_REPO = "docker.dbc.dk"
+def BUILD_NAME = "$PRODUCT :: $BRANCH"
+def DOCKER_REPO = "docker-fbiscrum.artifacts.dbccloud.dk"
 def DOCKER_NAME = "${DOCKER_REPO}/${CONTAINER_NAME}:${BUILD_NUMBER}"
 def DOCKER_NAME_LATEST = "${DOCKER_REPO}/${CONTAINER_NAME}:latest"
 pipeline {
@@ -38,15 +39,8 @@ pipeline {
             steps {
                 script {
                     if (currentBuild.resultIsBetterOrEqualTo('SUCCESS')) {
-                        def ARTY_SERVER = Artifactory.server 'arty'
-                        def ARTY_DOCKER = Artifactory.docker server: ARTY_SERVER, host: env.DOCKER_HOST
-                        def BUILD_INFO = Artifactory.newBuildInfo()
-                        BUILD_INFO.name = BUILD_NAME
-                        BUILD_INFO.env.capture = true
-                        BUILD_INFO.env.collect()
-                        BUILD_INFO = ARTY_DOCKER.push("$DOCKER_NAME", 'docker', BUILD_INFO)
-                        ARTY_DOCKER.push("$DOCKER_NAME_LATEST", 'docker-ux', BUILD_INFO)
-                        ARTY_SERVER.publishBuildInfo BUILD_INFO
+                        docker.image("${DOCKER_NAME}").push("${BUILD_NUMBER}")
+                        docker.image("${DOCKER_NAME_LATEST}").push("latest")
                     }
                 }
             }
