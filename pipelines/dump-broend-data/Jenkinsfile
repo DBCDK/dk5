@@ -40,9 +40,6 @@ pipeline {
             }
         }
         stage('Send file to Artifactory') {
-            when {
-                branch "master"
-            }
             steps {
                 script {
                     sh "echo archive ${OUTPUTFILE}"
