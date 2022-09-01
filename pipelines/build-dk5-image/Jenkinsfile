@@ -26,6 +26,8 @@ pipeline {
             steps {
                 script {
                     sh """
+                        npm --version
+                        node --version
                         docker build -t $DOCKER_NAME --pull --no-cache -f pipelines/build-dk5-image/Dockerfile .
                         docker tag $DOCKER_NAME $DOCKER_NAME_LATEST
                     """
