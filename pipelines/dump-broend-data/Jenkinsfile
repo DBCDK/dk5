@@ -9,7 +9,8 @@ properties([
         disableConcurrentBuilds()
 ])
 
-def FILE = "dk5_total.iso2709"
+def BRANCH = BRANCH_NAME.toLowerCase().replaceAll(/[\/._ ]/, "-")
+def OUTPUTFILE = "dk5_total.${BRANCH}.iso2709"
 
 pipeline {
     agent {
@@ -33,7 +34,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        $HOME/.rrdump/bin/rrdump.sh -m EXPANDED -f ISO -a 190007 -e UTF-8 -u ${RAW_REPO} -o ${FILE}
+                        $HOME/.rrdump/bin/rrdump.sh -m EXPANDED -f ISO -a 190007 -e UTF-8 -u ${RAW_REPO} -o ${OUTPUTFILE}
                     """
                 }
             }
@@ -44,10 +45,10 @@ pipeline {
             }
             steps {
                 script {
-                    sh "echo archive ${FILE}"
-                    archiveArtifacts "${FILE}"
-                    sh "echo push to ${ARTIFACTORY_DK5_DATA}${FILE}"
-                    sh "curl -k -u ${ARTIFACTORY_LOGIN} -T ${FILE} ${ARTIFACTORY_DK5_DATA}${FILE}"
+                    sh "echo archive ${OUTPUTFILE}"
+                    archiveArtifacts "${OUTPUTFILE}"
+                    sh "echo push to ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE}"
+                    sh "curl -k -u ${ARTIFACTORY_LOGIN} -T ${OUTPUTFILE} ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE}"
                 }
             }
         }
@@ -56,7 +57,7 @@ pipeline {
         failure {
             when {branch "master"} {
                 script {
-                    slackSend(channel: 'fe-drift',
+                    slackSend(channel: 'fbi-frontend-is',
                             color: 'warning',
                             message: "${env.JOB_NAME} #${env.BUILD_NUMBER} failed and needs attention: ${env.BUILD_URL}",
                             tokenCredentialId: 'slack-global-integration-token')
@@ -65,16 +66,16 @@ pipeline {
         }
         success {
             script {
-                if ("${env.BRANCH_NAME}" == 'master') {
-                    slackSend(channel: 'fe-drift',
+                if ("${env.BRANCH}" == 'master') {
+                    slackSend(channel: 'fbi-frontend-is',
                             color: 'good',
-                            message: "${env.JOB_NAME} #${env.BUILD_NUMBER} completed, and pushed ${FILE} to ${ARTIFACTORY_DK5_DATA}",
+                            message: "${env.JOB_NAME} #${env.BUILD_NUMBER} completed, and pushed ${OUTPUTFILE} to ${ARTIFACTORY_DK5_DATA}",
                             tokenCredentialId: 'slack-global-integration-token')
                 }
             }
         }
         fixed {
-            slackSend(channel: 'fe-drift',
+            slackSend(channel: 'fbi-frontend-is',
                     color: 'good',
                     message: "${env.JOB_NAME} #${env.BUILD_NUMBER} back to normal: ${env.BUILD_URL}",
                     tokenCredentialId: 'slack-global-integration-token')

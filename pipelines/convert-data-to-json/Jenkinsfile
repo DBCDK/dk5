@@ -9,8 +9,9 @@ properties([
         disableConcurrentBuilds()
 ])
 
-def INPUTFILE = "dk5_total.iso2709"
-def OUTPUTFILE = "elastic_bulk_load.json"
+def BRANCH = BRANCH_NAME.toLowerCase().replaceAll(/[\/._ ]/, "-")
+def INPUTFILE = "dk5_total.${BRANCH}.iso2709"
+def OUTPUTFILE = "elastic_bulk_load.${BRANCH}.json"
 
 pipeline {
     agent {
@@ -65,7 +66,7 @@ pipeline {
         failure {
             when {branch "master"} {
                 script {
-                    slackSend(channel: 'fe-drift',
+                    slackSend(channel: 'fbi-frontend-is',
                             color: 'warning',
                             message: "${env.JOB_NAME} #${env.BUILD_NUMBER} failed and needs attention: ${env.BUILD_URL}",
                             tokenCredentialId: 'slack-global-integration-token')
@@ -74,8 +75,8 @@ pipeline {
         }
         success {
             script {
-                if ("${env.BRANCH_NAME}" == 'master') {
-                    slackSend(channel: 'fe-drift',
+                if ("${env.BRANCH}" == 'master') {
+                    slackSend(channel: 'fbi-frontend-is',
                             color: 'good',
                             message: "${env.JOB_NAME} #${env.BUILD_NUMBER} completed, and pushed ${OUTPUTFILE} to ${ARTIFACTORY_DK5_DATA}",
                             tokenCredentialId: 'slack-global-integration-token')
@@ -83,7 +84,7 @@ pipeline {
             }
         }
         fixed {
-            slackSend(channel: 'fe-drift',
+            slackSend(channel: 'fbi-frontend-is',
                     color: 'good',
                     message: "${env.JOB_NAME} #${env.BUILD_NUMBER} back to normal: ${env.BUILD_URL}",
                     tokenCredentialId: 'slack-global-integration-token')

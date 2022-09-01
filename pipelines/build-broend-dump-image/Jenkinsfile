@@ -7,11 +7,12 @@ properties([
 ])
 
 def PRODUCT = "dbc-broend-env"
-def CONTAINER_NAME = "${PRODUCT}-${BRANCH_NAME}"
-if ("$BRANCH_NAME" == "master") {
+def BRANCH = BRANCH_NAME.toLowerCase().replaceAll(/[\/._ ]/, "-")
+def CONTAINER_NAME = "${PRODUCT}-${BRANCH}"
+if ("$BRANCH" == "master") {
     CONTAINER_NAME = "$PRODUCT"
 }
-def BUILD_NAME = "$PRODUCT :: $BRANCH_NAME"
+def BUILD_NAME = "$PRODUCT :: $BRANCH"
 def DOCKER_REPO = "docker-fbiscrum.artifacts.dbccloud.dk"
 def DOCKER_NAME = "${DOCKER_REPO}/${CONTAINER_NAME}:${BUILD_NUMBER}"
 def DOCKER_NAME_LATEST = "${DOCKER_REPO}/${CONTAINER_NAME}:latest"
