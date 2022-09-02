@@ -16,7 +16,7 @@ def OUTPUTFILE = "elastic_bulk_load.${BRANCH}.json"
 pipeline {
     agent {
         docker {
-            image "${DOCKER_REPO_DBC}/dbc-node:12"
+            image "${DOCKER_REPO_DBC}/dbc-node:10"
             label "devel10-head"
             args  "-v /home/isworker:/home/isworker"
         }
