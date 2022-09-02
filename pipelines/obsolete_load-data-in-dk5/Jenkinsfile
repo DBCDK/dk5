@@ -1,5 +1,7 @@
 #!groovy​
 
+// Moved to separate project / job
+
 properties([
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')),
         pipelineTriggers([]),
