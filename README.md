@@ -18,7 +18,7 @@ Install and start it
 ### Get data
 Records are dumped from cisterne with rrdump like:
 
-`rrdump -f ISO -a 190007 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o dk5_total_iso2709`
+`rrdump -m EXPANDED -f ISO -a 190007 -e UTF-8 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o dk5_total_iso2709`
 
 ### rrdump
 * https://github.com/DBCDK/rawrepo-dump-tool
@@ -78,6 +78,13 @@ After cloning the repository, run `npm install` to install dependencies. Copy te
 
 When started, the application will spawn two versions of the user interface: pro and non-pro. The pro version contains a more advanced featureset targeted professional users, while the non-pro version is targeted endusers on the libraries and therefore exposes a more limited and focussed featureset.
 The two versions will be available on the ports specified as environment variables. See [Environment variables](https://github.com/DBCDK/tanterne#environment-variables) for more info.
+
+## Build and deploy
+In pipelines buildjobs for the dk5 image, and build, dump and convert dk5-data is found.
+
+Deploy jobs is found in DBC gitlab: dk5-deploy
+
+Dataload for staging and prod is found in DBC gitlab: dk5-dataload
 
 ## Environment variables
 
