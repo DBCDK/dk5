@@ -1,4 +1,5 @@
 #!groovy​
+// Moved to seperate job
 
 properties([
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')),

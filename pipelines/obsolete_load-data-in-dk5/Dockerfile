@@ -1,3 +1,4 @@
+# Moved to seperate job ...
 ARG BASEIMAGE=docker-fbiscrum.artifacts.dbccloud.dk/dk5:latest
 # ---- Base Node ----
 FROM  $BASEIMAGE AS build
