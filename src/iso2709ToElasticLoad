@@ -70,11 +70,12 @@ info.forEach(function (error) {
 });
 
 console.log('\nStart Elastic Search and load data like:\n' +
-  '  curl -XDELETE \'localhost:9200/*\' -H \'Content-Type: application/json\'\n' +
-  '  curl -XPUT \'localhost:9200/systematic\' -H \'Content-Type: application/json\' -d \'{"mappings":{"dk5":{"properties":{"parent":{"enabled":"false"}}}},"settings":{"number_of_shards":1}}\'\n' +
-  '  curl -XPUT \'localhost:9200/register\' -H \'Content-Type: application/json\' -d \'{"settings":{"analysis":{"char_filter":{"dk5Filter":{"type":"mapping","mappings":[":=>kolon"]}},"analyzer":{"default":{"type":"custom","char_filter":["dk5"],"tokenizer":"standard","filter":["lowercase"]}}},"number_of_shards":1}}\'\n' +
-  '  curl -XPOST \'localhost:9200/_bulk?refresh=wait_for\' -H \'Content-Type: application/json\' --data-binary \'@' + option.output + '\'\n' +
-  '  curl -XPUT \'localhost:9200/*/_settings\' -H \'Content-Type: application/json\' -d \'{"index": {"max_result_window": 50000}}\'\n');
+  '  SERVER=localhost:9200\n' +
+  '  curl -XDELETE "${SERVER}/*" -H \'Content-Type: application/json\'\n' +
+  '  curl -XPUT "${SERVER}/systematic" -H \'Content-Type: application/json\' -d \'{"mappings":{"dk5":{"properties":{"parent":{"enabled":"false"}}}},"settings":{"number_of_shards":1}}\'\n' +
+  '  curl -XPUT "${SERVER}/register" -H \'Content-Type: application/json\' -d \'{"settings":{"analysis":{"char_filter":{"dk5":{"type":"mapping","mappings":[":=>kolon"]}},"analyzer":{"default":{"type":"custom","char_filter":["dk5"],"tokenizer":"standard","filter":["lowercase"]}}},"number_of_shards":1}}\'\n' +
+  '  curl -XPOST "${SERVER}/_bulk?refresh=wait_for" -H \'Content-Type: application/json\' --data-binary \'@' + option.output + '\'\n' +
+  '  curl -XPUT "${SERVER}/*/_settings" -H \'Content-Type: application/json\' -d \'{"index": {"max_result_window": 50000}}\'\n');
 process.exit(0);
 
 /* ------------------------------------------------------------------------------------------------------------------------------ */

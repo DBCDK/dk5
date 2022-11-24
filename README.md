@@ -30,22 +30,23 @@ Filter only one dk5 group like (for develop/test/debug purposes only)
 * `iso2709ToElasticLoad -f 13 -i dk5_total.iso2709 -o elastic_bulk_load.json`
 
 ### Load Elastic Search
-* `curl -XDELETE 'localhost:9200/*' -H 'Content-Type: application/json'`
-* `curl -XPUT 'localhost:9200/systematic' -H 'Content-Type: application/json' -d '{
+* `SERVER=localhost:9200`
+* `curl -XDELETE "${SERVER}/*" -H 'Content-Type: application/json'`
+* `curl -XPUT "${SERVER}/systematic" -H 'Content-Type: application/json' -d '{
   "mappings":{
     "dk5":{
-      "properties":{
-        "parent":{
-          "enabled":"false"
-        }
-      }
-    }
-  },
-  "settings": {
-    "number_of_shards": 1
+      "properties":{ 
+        "parent":{ 
+          "enabled":"false" 
+        } 
+      } 
+    } 
+  }, 
+  "settings": { 
+    "number_of_shards": 1 
   }
 }'`
-* `curl -XPUT 'localhost:9200/register' -H 'Content-Type: application/json' -d '{
+* `curl -XPUT "${SERVER}/register" -H 'Content-Type: application/json' -d '{
   "settings":{
     "analysis":{
       "char_filter":{
@@ -66,8 +67,8 @@ Filter only one dk5 group like (for develop/test/debug purposes only)
     "number_of_shards": 1
   }
 }'`
-* `curl -XPOST 'localhost:9200/_bulk?refresh=wait_for' -H 'Content-Type: application/json' --data-binary '@elastic_bulk_load.json'`
-* `curl -XPUT 'localhost:9200/*/_settings' -H 'Content-Type: application/json' -d '{
+* `curl -XPOST "${SERVER}/_bulk?refresh=wait_for" -H 'Content-Type: application/json' --data-binary '@elastic_bulk_load.json'`
+* `curl -XPUT "${SERVER}/*/_settings" -H 'Content-Type: application/json' -d '{
   "index": {
     "max_result_window": 50000
   }
