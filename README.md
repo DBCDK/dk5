@@ -18,7 +18,7 @@ Install and start it
 ### Get data
 Records are dumped from cisterne with rrdump like:
 
-`rrdump -f ISO -a 190007 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o dk5_total_iso2709`
+`rrdump -m EXPANDED -f ISO -a 190007 -e UTF-8 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o dk5_total_iso2709`
 
 ### rrdump
 * https://github.com/DBCDK/rawrepo-dump-tool
@@ -26,7 +26,7 @@ Records are dumped from cisterne with rrdump like:
 ### Convert
 * `iso2709ToElasticLoad -i dk5_total.iso2709 -o elastic_bulk_load.json`
 
-Filter only one dk5 group like (for test purposes)
+Filter only one dk5 group like (for develop/test/debug purposes only)
 * `iso2709ToElasticLoad -f 13 -i dk5_total.iso2709 -o elastic_bulk_load.json`
 
 ### Load Elastic Search
