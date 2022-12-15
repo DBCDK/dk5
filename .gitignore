@@ -53,3 +53,7 @@ errorShots/
 
 #macOs directory file
 .DS_Store
+
+# locally generated files
+elastic_bulk_load.json
+dk5_total.iso2709
