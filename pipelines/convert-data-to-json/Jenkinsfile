@@ -22,7 +22,7 @@ pipeline {
         }
     }
     triggers {
-        upstream(upstreamProjects: "dk5/dk5-dump-libv3-data/master",
+        upstream(upstreamProjects: "dk5/dk5-dump-broend-data/master",
                 threshold: hudson.model.Result.SUCCESS)
     }
     environment {
