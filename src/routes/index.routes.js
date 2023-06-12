@@ -53,7 +53,7 @@ router.get('/', ctx => {
       <head>
         <title>DK5</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        ${ctx.ttest ? '' : cookieBotScript}
+        ${ctx.test ? '' : cookieBotScript}
         <link rel="stylesheet" type="text/css" href="/css/main.css"/>
       </head>
       <body>
