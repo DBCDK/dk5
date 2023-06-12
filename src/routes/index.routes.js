@@ -12,11 +12,29 @@ const router = new Router();
 // Routes
 router.get('/', ctx => {
   const proClass = ctx.pro ? 'main pro' : 'main';
+  let cookieBotScript;
+  if (ctx.pro) {
+   cookieBotScript =
+     '<script type="text/javascript"' +
+       ' id="CookieDeclaration"' +
+       ' src="https://consent.cookiebot.com/f98c204a-ce93-4888-9257-53627ca0a361/cd.js"' +
+       ' async>' +
+     '</script>';
+  }
+  else {
+    cookieBotScript =
+      '<script type="text/javascript"' +
+        ' id="Cookiebot" ' +
+        ' src="https://consent.cookiebot.com/uc.js" ' +
+        ' data-cbid="f98c204a-ce93-4888-9257-53627ca0a361" ' +
+        ' data-blockingmode="auto">' +
+      '</script>';
+  }
   const matomoScript = `<!--Matomo -->
 <script type="text/javascript">
   var _paq = window._paq || [];
   _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
-  _paq.push(['trackPageView']);
+  _paq.push(['requireCookieConsent']);
   _paq.push(['enableLinkTracking']);
   (function() {
     var u="https://stats.dbc.dk/";
@@ -35,6 +53,7 @@ router.get('/', ctx => {
       <head>
         <title>DK5</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        ${ctx.ttest ? '' : cookieBotScript}
         <link rel="stylesheet" type="text/css" href="/css/main.css"/>
       </head>
       <body>

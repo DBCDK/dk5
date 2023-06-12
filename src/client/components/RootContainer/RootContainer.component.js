@@ -240,7 +240,9 @@ export class RootContainerComponent extends Component {
           <Link title='Om dk5' className='link' to='#!/about'>
             Om DK5
           </Link>
-          <br />
+          &nbsp; &nbsp; &nbsp; &nbsp;
+          <a className='link' onClick="Cookiebot.renew()">Administrer cookie indstillinger</a>
+          &nbsp; &nbsp; &nbsp; &nbsp;
           {(!this.state.pro && (
             <a
               title='tilgængelighedserklæring'
