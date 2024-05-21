@@ -222,10 +222,7 @@ export class HelpContainerComponent extends Component {
           <div>
             <div className="bullet">4</div>Romaner og noveller. Antologier
             <div className="note">
-              Her anbringes ogs&aring; antologier, sammensat af forskellige digtarter<br />
-              I grupperne 86 og 88 placerer Dansk bogfortegnelse l&aelig;seb&oslash;ger og prosaantologier til
-              skolebrug i en undergruppe med till&aelig;gstallet -046 eller -246.
-              Andre skoleudgaver af sk&oslash;nlitteratur placeres som tilsvarende alm. udgaver.
+              Her anbringes ogs&aring; antologier, sammensat af forskellige digtarter
             </div>
           </div>
           <div><div className="bullet">5</div>Romaner og noveller f&oslash;r 1901. V&aelig;rker af enkelte forfattere</div>
