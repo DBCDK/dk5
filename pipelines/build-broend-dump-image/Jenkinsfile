@@ -50,7 +50,7 @@ pipeline {
         always {
             script {
                 sh """
-                    echo Hello
+                    echo Hello broend
                     docker image rm $DOCKER_NAME
                 """
             }

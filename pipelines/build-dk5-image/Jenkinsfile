@@ -51,7 +51,7 @@ pipeline {
         always {
             script {
                 sh """
-                    echo Hello
+                    echo Hello build
                     docker image rm $DOCKER_NAME
                 """
             }
