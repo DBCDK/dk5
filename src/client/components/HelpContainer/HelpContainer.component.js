@@ -364,9 +364,10 @@ export class HelpContainerComponent extends Component {
           I grupper med underdeling for enkelte lande sættes værker, som omhandler enkelte perioder i enkelte lande, under landet.
         </div>
         <div className="section">
-          <i>Danske forhold vs. andre landes forhol</i><br />
+          <i>Danske forhold vs. andre landes forhold</i><br />
           Visse grupper har undergrupper til danske forhold og til andre landes forhold.
-          I sådanne tilfælde placeres fremstillinger omfattende både danske og andre landes forhold i overgruppen.
+          I sådanne tilfælde placeres fremstillinger omfattende både danske og andre landes forhold i overgruppen. 
+          Som danske anses også færøske og grønlandske forhold, medmindre der findes særskilte undergrupper til disse.
         </div>
         <div className="section">
           Hvis en speciel undergruppe til andre landes forhold findes, men ingen til danske forhold (f.eks. 34.38
