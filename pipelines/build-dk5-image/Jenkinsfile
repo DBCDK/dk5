@@ -1,62 +1,49 @@
-#!groovy​
+#!groovy
 
 properties([
-        buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')),
-        pipelineTriggers([]),
-            agent { label 'devel9-head' }
-            stages {
-                stage('Build Node Image') {
-                    steps {
-                        script {
-                            sh """
-                                docker build -t $DOCKER_NAME --pull --no-cache -f pipelines/build-dk5-image/Dockerfile .
-                                docker tag $DOCKER_NAME $DOCKER_NAME_LATEST
-                            """
-                        }
-                    }
-                }
-                stage('Test with Docker Compose') {
-                    steps {
-                        script {
-                            sh """
-                                docker-compose -f docker-compose.yml up --build --abort-on-container-exit --exit-code-from dk5-app
-                            """
-                        }
-                    }
-                }
-                stage('Push to Artifactory') {
-                    when { branch "master" }
-                    steps {
-                        script {
-                            if (currentBuild.resultIsBetterOrEqualTo('SUCCESS')) {
-                                docker.image("${DOCKER_NAME}").push("${BUILD_NUMBER}")
-                                docker.image("${DOCKER_NAME_LATEST}").push("latest")
-                            }
-                        }
-                    }
-                }
-            }
-            post {
-                always {
-                    script {
-                        sh """
-                            docker-compose down
-                            docker image rm $DOCKER_NAME
-                        """
-                    }
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')),
+    pipelineTriggers([])
+])
+
+pipeline {
+    agent { label 'devel9-head' }
+    stages {
+        stage('Build Node Image') {
+            steps {
+                script {
+                    sh """
+                        docker build -t $DOCKER_NAME --pull --no-cache -f pipelines/build-dk5-image/Dockerfile .
+                        docker tag $DOCKER_NAME $DOCKER_NAME_LATEST
+                    """
                 }
             }
         }
+        stage('Test with Docker Compose') {
+            steps {
+                script {
+                    sh """
+                        docker-compose -f docker-compose.yml up --build --abort-on-container-exit --exit-code-from dk5-app
+                    """
+                }
+            }
+        }
+        stage('Push to Artifactory') {
+            when { branch "master" }
+            steps {
+                script {
+                    if (currentBuild.resultIsBetterOrEqualTo('SUCCESS')) {
+                        docker.image("${DOCKER_NAME}").push("${BUILD_NUMBER}")
+                        docker.image("${DOCKER_NAME_LATEST}").push("latest")
+                    }
                 }
             }
         }
     }
-
     post {
         always {
             script {
                 sh """
-                    echo Hello build
+                    docker-compose down
                     docker image rm $DOCKER_NAME
                 """
             }
