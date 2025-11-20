@@ -22,6 +22,7 @@
     "wait": "wait-on http://localhost:4013 && wait-on http://localhost:4015",
     "cy:run": "cypress run",
     "cy:open": "cypress open"
+    ,"load:elastic": "bash scripts/load-elastic.sh ${ISO_FILE:-data/dk5_total.iso2709} ${FILTER:-}"
   },
   "repository": {
     "type": "git",

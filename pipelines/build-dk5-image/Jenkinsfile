@@ -3,45 +3,50 @@
 properties([
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')),
         pipelineTriggers([]),
-        disableConcurrentBuilds()
-])
-
-def PRODUCT = "dk5"
-def BRANCH = BRANCH_NAME.toLowerCase().replaceAll(/[\/._ ]/, "-")
-def CONTAINER_NAME = "${PRODUCT}-${BRANCH.toLowerCase()}"
-if ("$BRANCH" == "master") {
-    CONTAINER_NAME = "$PRODUCT"
-}
-def BUILD_NAME = "$PRODUCT :: $BRANCH"
-def DOCKER_REPO = "docker-fbiscrum.artifacts.dbccloud.dk"
-def DOCKER_NAME = "${DOCKER_REPO}/${CONTAINER_NAME}:${BUILD_NUMBER}"
-def DOCKER_NAME_LATEST = "${DOCKER_REPO}/${CONTAINER_NAME}:latest"
-
-pipeline {
-    agent {
-        label 'devel9-head'
-    }
-    stages {
-        stage('Build image') {
-            steps {
-                script {
-                    sh """
-                        docker build -t $DOCKER_NAME --pull --no-cache -f pipelines/build-dk5-image/Dockerfile .
-                        docker tag $DOCKER_NAME $DOCKER_NAME_LATEST
-                    """
+            agent { label 'devel9-head' }
+            stages {
+                stage('Build Node Image') {
+                    steps {
+                        script {
+                            sh """
+                                docker build -t $DOCKER_NAME --pull --no-cache -f pipelines/build-dk5-image/Dockerfile .
+                                docker tag $DOCKER_NAME $DOCKER_NAME_LATEST
+                            """
+                        }
+                    }
+                }
+                stage('Test with Docker Compose') {
+                    steps {
+                        script {
+                            sh """
+                                docker-compose -f docker-compose.yml up --build --abort-on-container-exit --exit-code-from dk5-app
+                            """
+                        }
+                    }
+                }
+                stage('Push to Artifactory') {
+                    when { branch "master" }
+                    steps {
+                        script {
+                            if (currentBuild.resultIsBetterOrEqualTo('SUCCESS')) {
+                                docker.image("${DOCKER_NAME}").push("${BUILD_NUMBER}")
+                                docker.image("${DOCKER_NAME_LATEST}").push("latest")
+                            }
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    script {
+                        sh """
+                            docker-compose down
+                            docker image rm $DOCKER_NAME
+                        """
+                    }
                 }
             }
         }
-        stage('Push to Artifactory') {
-            when {
-                branch "master"
-            }
-            steps {
-                script {
-                    if (currentBuild.resultIsBetterOrEqualTo('SUCCESS')) {
-                        docker.image("${DOCKER_NAME}").push("${BUILD_NUMBER}")
-                        docker.image("${DOCKER_NAME_LATEST}").push("latest")
-                    }
                 }
             }
         }

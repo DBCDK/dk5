@@ -1,0 +1,65 @@
+version: "3.7"
+services:
+  dk5-app:
+    build:
+      context: .
+      dockerfile: pipelines/build-dk5-image/Dockerfile
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      PRO_PORT: 3001
+      ELASTIC_HOST: elasticsearch:9200
+      LOG_LEVEL: error
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      es-init:
+        condition: service_started
+    # Use the CMD defined in Dockerfile (node -r @babel/register src/main.js)
+    volumes:
+      - ./data:/data
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.6.0
+    platform: linux/amd64
+    environment:
+      - bootstrap.system_call_filter=false
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./data:/data
+      - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  es-init:
+    build:
+      context: .
+      dockerfile: pipelines/build-dk5-image/Dockerfile
+    # Run once to load data if ISO present; skip if already loaded marker exists
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        'if [ -f /data/dk5_total.iso2709 ] && [ ! -f /data/.es_loaded ]; then echo ''Loading DK5 data into Elasticsearch''; node -r @babel/register src/iso2709ToElasticLoad -i /data/dk5_total.iso2709 -o /data/elastic_bulk_load.json && curl -s -XDELETE elasticsearch:9200/* -H ''Content-Type: application/json'' || true && curl -s -XPUT elasticsearch:9200/systematic -H ''Content-Type: application/json'' -d ''{"mappings":{"dk5":{"properties":{"parent":{"enabled":"false"}}}},"settings":{"number_of_shards":1}}'' && curl -s -XPUT elasticsearch:9200/register -H ''Content-Type: application/json'' -d ''{"settings":{"analysis":{"char_filter":{"dk5":{"type":"mapping","mappings":[":=>kolon"]}},"analyzer":{"default":{"type":"custom","char_filter":["dk5"],"tokenizer":"standard","filter":["lowercase"]}}},"number_of_shards":1}}'' && curl -s -XPOST ''elasticsearch:9200/_bulk?refresh=wait_for'' -H ''Content-Type: application/json'' --data-binary @/data/elastic_bulk_load.json && curl -s -XPUT elasticsearch:9200/*/_settings -H ''Content-Type: application/json'' -d ''{"index":{"max_result_window":50000}}'' && touch /data/.es_loaded; else echo ''Skip data load (missing ISO or already loaded)''; fi',
+      ]
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./data:/data
+    restart: "no"
+volumes:
+  esdata:
+    driver: local
