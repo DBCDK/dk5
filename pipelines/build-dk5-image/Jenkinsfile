@@ -7,6 +7,14 @@ properties([
 
 pipeline {
     agent { label 'devel9-head' }
+     environment {
+        PRODUCT = "dk5"
+        BRANCH = "${env.BRANCH_NAME?.toLowerCase()?.replaceAll(/[\\/._ ]/, '-') ?: 'master'}"
+        CONTAINER_NAME = "${BRANCH == 'master' ? PRODUCT : PRODUCT + '-' + BRANCH}"
+        DOCKER_REPO = "docker-fbiscrum.artifacts.dbccloud.dk"
+        DOCKER_NAME = "${DOCKER_REPO}/${CONTAINER_NAME}:${env.BUILD_NUMBER}"
+        DOCKER_NAME_LATEST = "${DOCKER_REPO}/${CONTAINER_NAME}:latest"
+    }
     stages {
         stage('Build Node Image') {
             steps {
