@@ -8,7 +8,7 @@
  */
 import { CONFIG } from "../../utils/config.util";
 import Levenshtein from "fast-levenshtein";
-import ElasticSearch from "elasticsearch";
+import { Client as ElasticClientV8 } from "@elastic/elasticsearch";
 import Autocomplete from "autocomplete";
 import * as esUtil from "./ElasticSearch.util";
 
@@ -23,10 +23,8 @@ export class ElasticClient {
       CONFIG.elastic.host === "static_mocks"
         ? "localhost:9200"
         : CONFIG.elastic.host;
-    this.elasticClient = new ElasticSearch.Client({
-      host: host,
-      log: CONFIG.elastic.log,
-    });
+    const node = host.startsWith("http") ? host : `http://${host}`;
+    this.elasticClient = new ElasticClientV8({ node });
 
     this.defaultSearchFields =
       "610,630,633,640,652,b00a,b52y,b52m,b52d,a20,a40".split(",");
@@ -43,10 +41,10 @@ export class ElasticClient {
       query: "q",
       limit: "size",
       offset: "from",
-      fields: "_source_include",
+      fields: "_source_includes",
       index: "index",
       sort: "sort",
-      op: "defaultOperator",
+      op: "default_operator",
     };
 
     /* loadTabsFromElasticSearch() loads the following */
@@ -78,23 +76,13 @@ export class ElasticClient {
    */
   async elasticPing() {
     let esStatus = false;
-    await this.elasticClient
-      .ping({
-        // ping usually has a 3000ms timeout
-        requestTimeout: 1000,
-      })
-      .then(
-        function (body) {
-          esStatus = body;
-        },
-        function (error) {
-          if (error) {
-            Logger.log.error(
-              "ElasticSearch cluster is down. Msg: " + error.message,
-            );
-          }
-        },
-      );
+    try {
+      const res = await this.elasticClient.ping();
+      // v8 client returns ApiResponse with body
+      esStatus = res && (res.body === true || res.statusCode === 200);
+    } catch (error) {
+      Logger.log.error("ElasticSearch cluster is down. Msg: " + error.message);
+    }
     return esStatus;
   }
 
@@ -322,7 +310,11 @@ export class ElasticClient {
           query: "652d:" + this.topGroups[i].index,
           index: "systematic",
         });
-        this.topGroups[i].title = esUtil.getEsField(topRes, 0, "652u")[0];
+        if (topRes && topRes.hits && topRes.hits.length > 0) {
+          this.topGroups[i].title = esUtil.getEsField(topRes, 0, "652u")[0];
+        } else {
+          this.topGroups[i].title = "";
+        }
         this.topGroups[i].decommissioned = false;
         this.topGroups[i].hasChildren = true;
       }
@@ -339,66 +331,73 @@ export class ElasticClient {
         },
         true,
       );
-      if (syst.total > 9999) {
+      if (syst && syst.total > 9999) {
         Logger.log.error("More that 9999 systematic records");
       }
-      const linkTranslate = {
-        0: "00-07",
-        "09.9999": "10-19",
-        19.9999: "20-29",
-        29.9999: "30-39",
-        39.9999: "40-49",
-        49.9999: "50-59",
-        59.9999: "60-69",
-        69.9999: "70-79",
-        78.29999: "78.3-78.8",
-        78.39999: "78.4-78.5",
-        78.419999: "78.42-78.43",
-        78.439999: "78.44-78.49",
-        78.609999: "78.61-78.63",
-        79.9999: "80-89",
-        81.9999: "82-88",
-        89.9999: "90-99",
-      };
-      for (let hitPos = 0; hitPos < syst.hits.length; hitPos++) {
-        let parentIndex = esUtil.getFirstElementInFieldList(syst, hitPos, [
-          "652j",
-        ]);
-        let parent = esUtil.getFirstElementInFieldList(syst, hitPos, [
-          "parent",
-        ]);
-        if (linkTranslate[parentIndex]) {
-          parentIndex = linkTranslate[parentIndex];
-          Object.keys(this.topGroups).forEach((idx) => {
-            if (this.topGroups[idx].index === parentIndex) {
-              parent = this.topGroups[idx].title;
-            }
-          });
-        }
-        const grp = esUtil.getFirstElementInFieldList(syst, hitPos, [
-          "652m",
-          "652n",
-          "652d",
-        ]);
-        if (grp) {
-          this.dk5NotesSystematic[grp] = esUtil.createTaggedSystematicNote(
-            syst,
-            hitPos,
-            "a40",
-          );
-          this.dk5NotesSystematicHistoric[grp] =
-            esUtil.createTaggedSystematicNote(syst, hitPos, "a30");
-          this.dk5HasChildren[parentIndex] = true;
-          this.dk5Syst[grp] = {
-            index: grp,
-            parentIndex: parentIndex,
-            title: esUtil.getFirstElementInFieldList(syst, hitPos, ["652u"]),
-            decommissioned:
-              esUtil.getFirstElementInFieldList(syst, hitPos, ["652x"]) === "2",
-            parent: parent,
-          };
-        }
-        /*
+      if (!syst || !syst.hits) {
+        // Index may not be created yet; skip until next call
+        Logger.log.error(
+          "Systematic index missing or empty during initialization",
+        );
+      } else {
+        const linkTranslate = {
+          0: "00-07",
+          "09.9999": "10-19",
+          19.9999: "20-29",
+          29.9999: "30-39",
+          39.9999: "40-49",
+          49.9999: "50-59",
+          59.9999: "60-69",
+          69.9999: "70-79",
+          78.29999: "78.3-78.8",
+          78.39999: "78.4-78.5",
+          78.419999: "78.42-78.43",
+          78.439999: "78.44-78.49",
+          78.609999: "78.61-78.63",
+          79.9999: "80-89",
+          81.9999: "82-88",
+          89.9999: "90-99",
+        };
+        for (let hitPos = 0; hitPos < syst.hits.length; hitPos++) {
+          let parentIndex = esUtil.getFirstElementInFieldList(syst, hitPos, [
+            "652j",
+          ]);
+          let parent = esUtil.getFirstElementInFieldList(syst, hitPos, [
+            "parent",
+          ]);
+          if (linkTranslate[parentIndex]) {
+            parentIndex = linkTranslate[parentIndex];
+            Object.keys(this.topGroups).forEach((idx) => {
+              if (this.topGroups[idx].index === parentIndex) {
+                parent = this.topGroups[idx].title;
+              }
+            });
+          }
+          const grp = esUtil.getFirstElementInFieldList(syst, hitPos, [
+            "652m",
+            "652n",
+            "652d",
+          ]);
+          if (grp) {
+            this.dk5NotesSystematic[grp] = esUtil.createTaggedSystematicNote(
+              syst,
+              hitPos,
+              "a40",
+            );
+            this.dk5NotesSystematicHistoric[grp] =
+              esUtil.createTaggedSystematicNote(syst, hitPos, "a30");
+            this.dk5HasChildren[parentIndex] = true;
+            this.dk5Syst[grp] = {
+              index: grp,
+              parentIndex: parentIndex,
+              title: esUtil.getFirstElementInFieldList(syst, hitPos, ["652u"]),
+              decommissioned:
+                esUtil.getFirstElementInFieldList(syst, hitPos, ["652x"]) ===
+                "2",
+              parent: parent,
+            };
+          }
+          /*
         else {
           Logger.log.error(
             'No dk5 group for ' +
@@ -406,6 +405,7 @@ export class ElasticClient {
           );
         }
         */
+        }
       }
     }
 
@@ -497,18 +497,26 @@ export class ElasticClient {
     if (!pro) {
       pars.query += " NOT 652x: 2";
     }
-    await this.elasticClient
-      .search(esUtil.setAndMap(pars, this.defaultParameters, this.esParMap))
-      .then(
-        function (body) {
-          esHits = body.hits;
-        },
-        function (error) {
-          const errorMessage = `ElasticSearch search error. Msg: ${error.message}`;
-          Logger.log.error(errorMessage);
-          esHits.error = errorMessage;
-        },
+    try {
+      const params = esUtil.setAndMap(
+        pars,
+        this.defaultParameters,
+        this.esParMap,
       );
+      // Remove empty sort param that causes query_shard_exception in ES8
+      if (params.sort === "") {
+        delete params.sort;
+      }
+      const res = await this.elasticClient.search(params);
+      // v8 client returns ApiResponse with body.hits
+      const hitsContainer =
+        res && res.body && res.body.hits ? res.body.hits : res.hits;
+      esHits = hitsContainer || {};
+    } catch (error) {
+      const errorMessage = `ElasticSearch search error. Msg: ${error.message}`;
+      Logger.log.error(errorMessage);
+      esHits.error = errorMessage;
+    }
     return esHits;
   }
 

@@ -29,24 +29,25 @@
  * See below for how to load Elastic Search.
  *
  */
-var fs = require('fs');
-var stdio = require('stdio');
+var fs = require("fs");
+var stdio = require("stdio");
 
-const GS = String.fromCharCode(0x1D);  // record separator
-const RS = String.fromCharCode(0x1E);  // field separator
-const US = String.fromCharCode(0x1F);  // subfield separator
+const GS = String.fromCharCode(0x1d); // record separator
+const RS = String.fromCharCode(0x1e); // field separator
+const US = String.fromCharCode(0x1f); // subfield separator
 
-const indexRec = {index: {_index: 'dk5', _type: 'dk5', _id: 0}};
+// ES8: remove deprecated _type from bulk action metadata
+const indexRec = { index: { _index: "dk5", _id: 0 } };
 const option = getOptions();
 
-const records = fs.readFileSync(option.input, 'utf8').split(GS);
+const records = fs.readFileSync(option.input, "utf8").split(GS);
 const progress = new stdio.ProgressBar(records.length);
 
-const outfile = fs.openSync(option.output, 'w');
+const outfile = fs.openSync(option.output, "w");
 const filter = option.filter;
 
 const dk5Buf = [];
-const info = [''];
+const info = [""];
 let deleted = 0;
 let closed = 0;
 let missing = 0;
@@ -56,26 +57,29 @@ records.forEach(function (record) {
   progress.tick();
 });
 
-const {dk5SystTab, dk5RegTab} = createDk5Tab();
+const { dk5SystTab, dk5RegTab } = createDk5Tab();
 
 dumpRecords();
-info.push('  found ' + closed + ' closed records (652x: 2)');
-info.push('  skipped ' + deleted + ' deleted records (004r: d)');
-info.push('Created ' + missing + ' register records from systematic');
+info.push("  found " + closed + " closed records (652x: 2)");
+info.push("  skipped " + deleted + " deleted records (004r: d)");
+info.push("Created " + missing + " register records from systematic");
 
 fs.closeSync(outfile);
 
-info.forEach(function (error) {
-  console.log(error);
+info.forEach(function (line) {
+  console.log(line);
 });
 
-console.log('\nStart Elastic Search and load data like:\n' +
-  '  SERVER=localhost:9200\n' +
-  '  curl -XDELETE "${SERVER}/*" -H \'Content-Type: application/json\'\n' +
-  '  curl -XPUT "${SERVER}/systematic" -H \'Content-Type: application/json\' -d \'{"mappings":{"dk5":{"properties":{"parent":{"enabled":"false"}}}},"settings":{"number_of_shards":1}}\'\n' +
-  '  curl -XPUT "${SERVER}/register" -H \'Content-Type: application/json\' -d \'{"settings":{"analysis":{"char_filter":{"dk5":{"type":"mapping","mappings":[":=>kolon"]}},"analyzer":{"default":{"type":"custom","char_filter":["dk5"],"tokenizer":"standard","filter":["lowercase"]}}},"number_of_shards":1}}\'\n' +
-  '  curl -XPOST "${SERVER}/_bulk?refresh=wait_for" -H \'Content-Type: application/json\' --data-binary \'@' + option.output + '\'\n' +
-  '  curl -XPUT "${SERVER}/*/_settings" -H \'Content-Type: application/json\' -d \'{"index": {"max_result_window": 50000}}\'\n');
+console.log(`\nStart Elastic Search and load data like (ES8 syntax):
+  SERVER=localhost:9200
+  curl -XDELETE "$SERVER/systematic" || true
+  curl -XDELETE "$SERVER/register" || true
+  curl -XPUT "$SERVER/systematic" -H 'Content-Type: application/json' -d '{"mappings":{"properties":{"parent":{"enabled":false}}},"settings":{"number_of_shards":1}}'
+  curl -XPUT "$SERVER/register" -H 'Content-Type: application/json' -d '{"settings":{"analysis":{"char_filter":{"dk5":{"type":"mapping","mappings":[":=>kolon"]}},"analyzer":{"default":{"type":"custom","char_filter":["dk5"],"tokenizer":"standard","filter":["lowercase"]}}},"number_of_shards":1}}'
+  curl -XPOST "$SERVER/_bulk?refresh=wait_for" -H 'Content-Type: application/json' --data-binary '@${option.output}'
+  curl -XPUT "$SERVER/systematic/_settings" -H 'Content-Type: application/json' -d '{"index":{"max_result_window":50000}}'
+  curl -XPUT "$SERVER/register/_settings" -H 'Content-Type: application/json' -d '{"index":{"max_result_window":50000}}'
+`);
 process.exit(0);
 
 /* ------------------------------------------------------------------------------------------------------------------------------ */
@@ -87,9 +91,9 @@ process.exit(0);
  */
 function getOptions() {
   const ops = stdio.getopt({
-    input: {key: 'i', args: 1, description: 'Input file'},
-    output: {key: 'o', args: 1, description: 'Output file'},
-    filter: {key: 'f', args: '*', description: 'filter dk5 group'}
+    input: { key: "i", args: 1, description: "Input file" },
+    output: { key: "o", args: 1, description: "Output file" },
+    filter: { key: "f", args: "*", description: "filter dk5 group" },
   });
   if (!ops.input || !ops.output) {
     ops.printHelp();
@@ -107,17 +111,23 @@ function createDk5Tab() {
   const dk5s = {};
   const regs = {};
   dk5Buf.forEach(function (dk5) {
-    let bibKat = dk5['d09z'] ? dk5['d09z'][0].substr(0, 3) : 'NUL';
-    const number = Array.isArray(dk5['652m']) ? dk5['652m'][0] : (Array.isArray(dk5['652n']) ? dk5['652n'][0] : '');
-    if (bibKat === 'DK5') {   // only for systematic
-      const text = Array.isArray(dk5['652u']) ? dk5['652u'][0] : '';
+    let bibKat = dk5["d09z"] ? dk5["d09z"][0].substr(0, 3) : "NUL";
+    const number = Array.isArray(dk5["652m"])
+      ? dk5["652m"][0]
+      : Array.isArray(dk5["652n"])
+      ? dk5["652n"][0]
+      : "";
+    if (bibKat === "DK5") {
+      // only for systematic
+      const text = Array.isArray(dk5["652u"]) ? dk5["652u"][0] : "";
       if (number && text) {
         dk5s[number] = text;
       }
     }
-    if (bibKat === 'REK') {   // only for register
+    if (bibKat === "REK") {
+      // only for register
       regs[number] = true;
-      const registerWords = dk5['b52m'];
+      const registerWords = dk5["b52m"];
       if (registerWords) {
         registerWords.forEach((registerWord) => {
           regs[registerWord] = true;
@@ -125,49 +135,62 @@ function createDk5Tab() {
       }
     }
   });
-  return {dk5SystTab: dk5s, dk5RegTab: regs};
+  return { dk5SystTab: dk5s, dk5RegTab: regs };
 }
 
 /**
  * Enrich with parent name and dump record in correct index
  */
 function dumpRecords() {
-  const topGroup = ['00-07', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90-99'];
+  const topGroup = [
+    "00-07",
+    "10-19",
+    "20-29",
+    "30-39",
+    "40-49",
+    "50-59",
+    "60-69",
+    "70-79",
+    "80-89",
+    "90-99",
+  ];
   const bibKatMap = {
-    DK5: {index: 'systematic', no: 0},
-    REK: {index: 'register', no: 0},
-    NUL: {index: 'ignored', no: 0}
+    DK5: { index: "systematic", no: 0 },
+    REK: { index: "register", no: 0 },
+    NUL: { index: "ignored", no: 0 },
   };
   let recno = 0;
   dk5Buf.forEach(function (dk5) {
-    if (dk5['004r'] && dk5['004r'][0] === 'd') {
+    if (dk5["004r"] && dk5["004r"][0] === "d") {
       deleted++;
-    }
-    else {
-      if (dk5['652x'] && dk5['652x'][0] === '2') {
+    } else {
+      if (dk5["652x"] && dk5["652x"][0] === "2") {
         closed++;
       }
-      const d09zStem = dk5['d09z'] ? dk5['d09z'][0].substr(0, 3) : 'NUL';
-      const bibKat = bibKatMap[d09zStem] ? d09zStem : 'NUL';
-      let number = '';
-      ['652m', '652n', '652d'].forEach((subf) => {
+      const d09zStem = dk5["d09z"] ? dk5["d09z"][0].substr(0, 3) : "NUL";
+      const bibKat = bibKatMap[d09zStem] ? d09zStem : "NUL";
+      let number = "";
+      ["652m", "652n", "652d"].forEach((subf) => {
         if (!number && Array.isArray(dk5[subf])) {
           number = dk5[subf][0];
         }
       });
-      if (bibKat === 'DK5') {
-        const parent = Array.isArray(dk5['652j']) ? dk5['652j'][0] : '';
+      if (bibKat === "DK5") {
+        const parent = Array.isArray(dk5["652j"]) ? dk5["652j"][0] : "";
         if (!dk5RegTab[number]) {
           missing++;
         }
         if (dk5SystTab[parent]) {
-          dk5['parent'] = [dk5SystTab[parent]];
+          dk5["parent"] = [dk5SystTab[parent]];
         }
         // create "missing" register record - not all systematic have a register record
-        if (!dk5RegTab[number] || (dk5['652d'] && topGroup.indexOf(dk5['652d'][0]) > -1)) {
-          bibKatMap['REK'].no++;
+        if (
+          !dk5RegTab[number] ||
+          (dk5["652d"] && topGroup.indexOf(dk5["652d"][0]) > -1)
+        ) {
+          bibKatMap["REK"].no++;
           indexRec.index._id = recno++;
-          indexRec.index._index = 'register';
+          indexRec.index._index = "register";
           writeRecord(JSON.stringify(indexRec));
           writeRecord(JSON.stringify(dk5));
         }
@@ -176,15 +199,17 @@ function dumpRecords() {
       bibKatMap[bibKat].no++;
       indexRec.index._id = recno++;
       indexRec.index._index = index;
-      if (!filter || (number && (filter === number.substr(0, filter.length)))) {
+      if (!filter || (number && filter === number.substr(0, filter.length))) {
         writeRecord(JSON.stringify(indexRec));
         writeRecord(JSON.stringify(dk5));
       }
     }
   });
-  info.push('Converted ' + (recno + deleted) + ' records');
+  info.push("Converted " + (recno + deleted) + " records");
   Object.keys(bibKatMap).forEach((bibKat) => {
-    info.push('  ' + bibKatMap[bibKat].index + ' ' + bibKatMap[bibKat].no + ' records');
+    info.push(
+      "  " + bibKatMap[bibKat].index + " " + bibKatMap[bibKat].no + " records",
+    );
   });
 }
 
@@ -221,15 +246,15 @@ function parseTag(dataRec, tag, value) {
   let subField = value.split(US);
   let tagValue = [];
   subField.forEach(function (subf) {
-    if (subf && !(tag === 'a40' && subf.substr(0, 1) === 'x')) {
+    if (subf && !(tag === "a40" && subf.substr(0, 1) === "x")) {
       let subVal = subf.substr(1).trim();
-      if (subVal && subVal !== '.' && subVal !== ',') {
+      if (subVal && subVal !== "." && subVal !== ",") {
         savePush(dataRec, tag + subf.substr(0, 1), subVal);
         tagValue.push(subVal);
       }
     }
   });
-  savePush(dataRec, tag, tagValue.join(' '));
+  savePush(dataRec, tag, tagValue.join(" "));
 }
 
 /**
@@ -237,7 +262,7 @@ function parseTag(dataRec, tag, value) {
  * @param {string} str
  */
 function writeRecord(str) {
-  fs.writeSync(outfile, str + '\n', null, 'utf8');
+  fs.writeSync(outfile, str + "\n", null, "utf8");
 }
 
 /**

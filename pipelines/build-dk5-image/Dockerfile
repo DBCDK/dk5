@@ -1,4 +1,5 @@
-FROM node:10 AS build
+FROM node:20 AS build
+ENV NODE_OPTIONS=--openssl-legacy-provider
 WORKDIR /home/node/app
 COPY . .
 COPY .babelrc .
@@ -6,13 +7,14 @@ COPY .babelrc .
 ENV CI=true
 
 RUN npm set progress=false && npm config set depth 0 && \
-    npm install --only=production && \
+    npm install --omit=dev --legacy-peer-deps && \
     mkdir prod_build && \
     cp -R --preserve=links node_modules prod_build/node_modules && \
-    npm install && \
+    npm install --legacy-peer-deps && \
     npm run build
 
-FROM node:10 AS release
+FROM node:20 AS release
+ENV NODE_OPTIONS=--openssl-legacy-provider
 ENV BABEL_CACHE_PATH=~/app/babel.cache.json
 WORKDIR /home/node/app
 COPY --chown=node:node --from=build /home/node/app/checkElasticsearch.sh .
