@@ -1,4 +1,7 @@
-FROM node:20 AS build
+
+ARG NODE_BASEIMAGE=docker-dbc.artifacts.dbccloud.dk/dbc-node:20.10.0
+# ---- Base Node ----
+FROM  $NODE_BASEIMAGE AS build
 ENV NODE_OPTIONS=--openssl-legacy-provider
 WORKDIR /home/node/app
 COPY . .
@@ -13,10 +16,15 @@ RUN npm set progress=false && npm config set depth 0 && \
     npm install --legacy-peer-deps && \
     npm run build
 
-FROM node:20 AS release
+FROM node:20.14-alpine3.21 AS release
 ENV NODE_OPTIONS=--openssl-legacy-provider
 ENV BABEL_CACHE_PATH=~/app/babel.cache.json
 WORKDIR /home/node/app
+
+# Upgrade to the latest patch version and update system packages to reduce vulnerabilities
+RUN apk update && \
+    apk upgrade --available && \
+    rm -rf /var/cache/apk/*
 COPY --chown=node:node --from=build /home/node/app/checkElasticsearch.sh .
 COPY --chown=node:node --from=build /home/node/app/package.json .
 COPY --chown=node:node --from=build /home/node/app/.babelrc .
