@@ -42,7 +42,7 @@ pipeline {
         always {
             script {
                 sh """
-                    docker image rm $DOCKER_NAME
+                    docker image rm $DOCKER_NAME || true
                 """
             }
         }
