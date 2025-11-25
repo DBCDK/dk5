@@ -3,12 +3,12 @@ ARG NODE_BASEIMAGE=docker-dbc.artifacts.dbccloud.dk/dbc-node:latest
 # ---- Base Node ----
 FROM node:20.14 AS build
 ENV UV_THREADPOOL_SIZE=1
-RUN apt-get update || true
-RUN apt-get install -y --no-install-recommends gnupg
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6ED0E7B82643E131 78DBA3BC47EF2265 F8D2585B8783D481 54404762BBB6E853 BDE6D2B9216EC7A8 || true
-RUN apt-get update
-RUN apt-get install -y libc6 libgcc1 libstdc++6 python3 make g++
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update || true && \
+    apt-get install -y --no-install-recommends gnupg && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6ED0E7B82643E131 78DBA3BC47EF2265 F8D2585B8783D481 54404762BBB6E853 BDE6D2B9216EC7A8 || true && \
+    apt-get update && \
+    apt-get install -y libc6 libgcc1 libstdc++6 python3 make g++ && \
+    rm -rf /var/lib/apt/lists/*
 ENV NODE_OPTIONS=--openssl-legacy-provider
 WORKDIR /home/node/app
 COPY . .
