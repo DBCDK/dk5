@@ -1,7 +1,7 @@
 
 ARG NODE_BASEIMAGE=docker-dbc.artifacts.dbccloud.dk/dbc-node:latest
 # ---- Base Node ----
-FROM  $NODE_BASEIMAGE AS build
+FROM node:20.14-slim AS build
 ENV NODE_OPTIONS=--openssl-legacy-provider
 WORKDIR /home/node/app
 COPY . .
