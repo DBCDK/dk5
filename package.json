@@ -83,7 +83,7 @@
     "chai": "^4.2.0",
     "css-loader": "^4.2.0",
     "cssnano": "^4.1.10",
-    "cypress": "^4.11.0",
+    "cypress": "^13.6.2",
     "eslint": "^7.6.0",
     "eslint-plugin-react": "^7.20.5",
     "hard-source-webpack-plugin": "^0.13.1",

@@ -1,8 +1,11 @@
 // <reference types="Cypress" />
 /* global cy, Cypress */
 
-const baseUrl = Cypress.config("baseUrl");
-const proBaseUrl = Cypress.config("baseUrl");
+const host = Cypress.env("CYPRESS_APP_HOST") || "http://localhost";
+const port = Cypress.env("CYPRESS_APP_PORT") || "4013";
+const proPort = Cypress.env("CYPRESS_APP_PRO_PORT") || "4015";
+const baseUrl = `${host}:${port}`;
+const proBaseUrl = `${host}:${proPort}`;
 context("Testing the navbar (small screen)", () => {
   beforeEach(() => {
     cy.viewport(320, 568);

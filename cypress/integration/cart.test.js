@@ -1,7 +1,9 @@
 // <reference types="Cypress" />
 /* global cy, Cypress */
 
-const proBaseUrl = Cypress.config("baseUrl");
+const host = Cypress.env("CYPRESS_APP_HOST") || "http://localhost";
+const proPort = Cypress.env("CYPRESS_APP_PRO_PORT") || "4015";
+const proBaseUrl = `${host}:${proPort}`;
 context("Testing cart on pro site (desktop)", () => {
   beforeEach(() => {
     cy.viewport(1000, 700);
@@ -9,7 +11,6 @@ context("Testing cart on pro site (desktop)", () => {
   });
 
   it("It should display cart", () => {
-    // cy.get('#item-index-48').should('be.visible');
     cy.get(".top-bar--container .top-bar--cart").should("be.visible");
     cy.get(".top-bar--container .top-bar--cart--count").should("be.visible");
   });

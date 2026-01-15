@@ -1,7 +1,9 @@
 // <reference types="Cypress" />
 /* global cy, Cypress, expect */
 
-const proBaseUrl = Cypress.config("baseUrl");
+const host = Cypress.env("CYPRESS_APP_HOST") || "http://localhost";
+const proPort = Cypress.env("CYPRESS_APP_PRO_PORT") || "4015";
+const proBaseUrl = `${host}:${proPort}`;
 context("Testing cart on pro site (small screen)", () => {
   beforeEach(() => {
     cy.viewport(320, 568);
