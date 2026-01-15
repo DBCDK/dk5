@@ -25,6 +25,7 @@ WORKDIR /home/node/app
 # Upgrade to the latest patch version and update system packages to reduce vulnerabilities
 RUN apk update && \
     apk upgrade --available && \
+    apk add --no-cache curl && \
     rm -rf /var/cache/apk/*
 COPY --chown=node:node --from=build /home/node/app/checkElasticsearch.sh .
 COPY --chown=node:node --from=build /home/node/app/package.json .

@@ -10,7 +10,7 @@
     "dev": "npm run build:dev & . ./env.env && npm run serve",
     "lint": "eslint ./src ./cypress/integration --cache",
     "serve": "nodemon --exec node --no-stdin src/main.js",
-    "build": "webpack --define process.env.NODE_ENV='\"production\"' --progress --colors -p",
+    "build": "NODE_ENV=production webpack --define process.env.NODE_ENV='\"production\"' --progress --colors -p",
     "build:dev": "webpack --progress --colors --watch -d",
     "precommit": "npm run lint && npm run test && npm run test:integration:local",
     "test": ". ./test.env && mocha --recursive ./src/**/*.test.js --require @babel/register",
