@@ -75,15 +75,14 @@ export class ElasticClient {
    * @returns {*}
    */
   async elasticPing() {
-    let esStatus = false;
     try {
-      const res = await this.elasticClient.ping();
-      // v8 client returns ApiResponse with body
-      esStatus = res && (res.body === true || res.statusCode === 200);
+      const res = await this.elasticClient.cluster.health();
+      await this.elasticClient.cluster.health();
+      return true;
     } catch (error) {
       Logger.log.error("ElasticSearch cluster is down. Msg: " + error.message);
+      return false;
     }
-    return esStatus;
   }
 
   /**
@@ -424,7 +423,7 @@ export class ElasticClient {
         );
       }
       this.autocomplete.initialize((onReady) => {
-        onReady(this.vocabulary);
+        onReady(Array.isArray(this.vocabulary) ? this.vocabulary : []);
       });
       const regNotes = await this.rawElasticSearch(
         {
