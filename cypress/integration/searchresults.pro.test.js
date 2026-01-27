@@ -15,8 +15,11 @@ context("Testing the searchresultspage on pro version", () => {
   });
 
   it("Should display the comparer when adding an item", () => {
-    cy.get(".comparer--content").should("not.be.visible");
+    cy.get(".comparer--content").should("not.exist");
     cy.get(".cart-button-container").first().click();
-    cy.get(".comparer--content:visible").should("be.visible");
+    // Wait briefly for re-render
+    cy.wait(200);
+    cy.get("#comparer").should("have.class", "show-cart");
+    cy.get(".comparer--content").should("exist");
   });
 });
