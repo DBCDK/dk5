@@ -62,6 +62,6 @@ context("Testing Hierarchy in mobile view", () => {
     cy.get(".hierarchy--navbar--href").should("have.attr", "href", "/");
 
     cy.get(".hierarchy--navbar--href").click();
-    cy.get(".hierarchy--navbar").should("not.be.visible");
+    cy.get("body").find(".hierarchy--navbar").should("not.exist");
   });
 });

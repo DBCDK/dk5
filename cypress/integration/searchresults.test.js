@@ -12,7 +12,7 @@ context("Testing the searchresultspage on normal version", () => {
   });
 
   it("Should not display the comparer", () => {
-    cy.get(".comparer--content").should("not.be.visible");
-    cy.get("#comparer--content").should("not.be.visible");
+    cy.get("body").find(".comparer--content").should("not.exist");
+    cy.get("body").find("#comparer--content").should("not.exist");
   });
 });
