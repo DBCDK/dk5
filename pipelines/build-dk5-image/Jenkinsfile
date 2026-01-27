@@ -6,7 +6,10 @@ properties([
 ])
 
 pipeline {
-    agent { label 'devel9-head' }
+    agent { label params.AGENT_LABEL }
+    parameters {
+        string(name: 'AGENT_LABEL', defaultValue: 'devel12', description: 'Jenkins agent label to run this pipeline on')
+    }
      environment {
         PRODUCT = "dk5"
         BRANCH = "${env.BRANCH_NAME?.toLowerCase()?.replaceAll(/[\\/._ ]/, '-') ?: 'master'}"
@@ -17,11 +20,18 @@ pipeline {
     }
     stages {
         stage('Build Node Image') {
+            agent {
+                    docker {
+                    label workerNode
+                    image "docker-dbc.artifacts.dbccloud.dk/build-env:latest"
+                alwaysPull true
+            }
+        }
             steps {
                 script {
                     sh """
-                        docker build -t $DOCKER_NAME --pull --no-cache -f pipelines/build-dk5-image/Dockerfile .
-                        docker tag $DOCKER_NAME $DOCKER_NAME_LATEST
+                        docker build -t ${env.DOCKER_NAME} --pull --no-cache -f pipelines/build-dk5-image/Dockerfile .
+                        docker tag ${env.DOCKER_NAME} ${env.DOCKER_NAME_LATEST}
                     """
                 }
             }
@@ -31,8 +41,8 @@ pipeline {
             steps {
                 script {
                     if (currentBuild.resultIsBetterOrEqualTo('SUCCESS')) {
-                        docker.image("${DOCKER_NAME}").push("${BUILD_NUMBER}")
-                        docker.image("${DOCKER_NAME_LATEST}").push("latest")
+                        docker.image(env.DOCKER_NAME).push(env.BUILD_NUMBER)
+                        docker.image(env.DOCKER_NAME_LATEST).push('latest')
                     }
                 }
             }
@@ -41,9 +51,7 @@ pipeline {
     post {
         always {
             script {
-                sh """
-                    docker image rm $DOCKER_NAME || true
-                """
+                sh 'docker image rm $DOCKER_NAME || true'
             }
         }
     }
