@@ -1,57 +1,57 @@
-#!groovy
-
 properties([
-    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')),
-    pipelineTriggers([])
+        buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')),
+        pipelineTriggers([]),
+        disableConcurrentBuilds()
 ])
 
+def PRODUCT = "dk5"
+def BRANCH = BRANCH_NAME.toLowerCase().replaceAll(/[\/._ ]/, "-")
+def CONTAINER_NAME = "${PRODUCT}-${BRANCH.toLowerCase()}"
+if ("$BRANCH" == "master") {
+    CONTAINER_NAME = "$PRODUCT"
+}
+def BUILD_NAME = "$PRODUCT :: $BRANCH"
+def DOCKER_REPO = "docker-fbiscrum.artifacts.dbccloud.dk"
+def DOCKER_NAME = "${DOCKER_REPO}/${CONTAINER_NAME}:${BUILD_NUMBER}"
+def DOCKER_NAME_LATEST = "${DOCKER_REPO}/${CONTAINER_NAME}:latest"
+
 pipeline {
-    agent { label params.AGENT_LABEL }
-    parameters {
-        string(name: 'AGENT_LABEL', defaultValue: 'devel12', description: 'Jenkins agent label to run this pipeline on')
-    }
-     environment {
-        PRODUCT = "dk5"
-        BRANCH = "${env.BRANCH_NAME?.toLowerCase()?.replaceAll(/[\\/._ ]/, '-') ?: 'master'}"
-        CONTAINER_NAME = "${BRANCH == 'master' ? PRODUCT : PRODUCT + '-' + BRANCH}"
-        DOCKER_REPO = "docker-fbiscrum.artifacts.dbccloud.dk"
-        DOCKER_NAME = "${DOCKER_REPO}/${CONTAINER_NAME}:${env.BUILD_NUMBER}"
-        DOCKER_NAME_LATEST = "${DOCKER_REPO}/${CONTAINER_NAME}:latest"
+    agent {
+        label 'devel12'
     }
     stages {
-        stage('Build Node Image') {
-            agent {
-                    docker {
-                    label "devel12"
-                    image "docker-dbc.artifacts.dbccloud.dk/build-env:latest"
-                alwaysPull true
-            }
-        }
+        stage('Build image') {
             steps {
                 script {
                     sh """
-                        docker build -t ${env.DOCKER_NAME} --pull --no-cache -f pipelines/build-dk5-image/Dockerfile .
-                        docker tag ${env.DOCKER_NAME} ${env.DOCKER_NAME_LATEST}
+                        docker build -t $DOCKER_NAME --pull --no-cache -f pipelines/build-dk5-image/Dockerfile .
+                        docker tag $DOCKER_NAME $DOCKER_NAME_LATEST
                     """
                 }
             }
         }
         stage('Push to Artifactory') {
-            when { branch "master" }
+            when {
+                branch "master"
+            }
             steps {
                 script {
                     if (currentBuild.resultIsBetterOrEqualTo('SUCCESS')) {
-                        docker.image(env.DOCKER_NAME).push(env.BUILD_NUMBER)
-                        docker.image(env.DOCKER_NAME_LATEST).push('latest')
+                        docker.image("${DOCKER_NAME}").push("${BUILD_NUMBER}")
+                        docker.image("${DOCKER_NAME_LATEST}").push("latest")
                     }
                 }
             }
         }
     }
+
     post {
         always {
             script {
-                sh 'docker image rm $DOCKER_NAME || true'
+                sh """
+                    echo Hello build
+                    docker image rm $DOCKER_NAME
+                """
             }
         }
     }
