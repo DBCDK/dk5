@@ -2,8 +2,8 @@
 /* global cy, Cypress */
 
 const host = Cypress.env("CYPRESS_APP_HOST") || "http://localhost";
-const port = Cypress.env("CYPRESS_APP_PORT") || "4013";
-const proPort = Cypress.env("CYPRESS_APP_PRO_PORT") || "4015";
+const port = Cypress.env("CYPRESS_APP_PORT") || "3000";
+const proPort = Cypress.env("CYPRESS_APP_PRO_PORT") || "3001";
 const baseUrl = `${host}:${port}`;
 const proBaseUrl = `${host}:${proPort}`;
 context("Testing frontpage", () => {

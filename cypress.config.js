@@ -1,7 +1,7 @@
 import { defineConfig } from "cypress";
 
 const host = process.env.CYPRESS_APP_HOST || "http://localhost";
-const port = process.env.CYPRESS_APP_PORT || "4013";
+const port = process.env.CYPRESS_APP_PORT || "3001";
 
 export default defineConfig({
   e2e: {

@@ -19,7 +19,7 @@
     "test:integration": ". ./test.env && npm run start & npm run wait && . ./test.env && npm run cy:run",
     "test:integration:local": "npm run start:local & npm run wait && . ./env.env && . ./test.env && npm run cy:open",
     "test:integration:jenkins": "npm run start & npm run wait && npm run cy:run",
-    "wait": "wait-on http://localhost:4013 && wait-on http://localhost:4015",
+    "wait": "wait-on http://localhost:$PORT && wait-on http://localhost:$PRO_PORT",
     "cy:run": "cypress run",
     "cy:open": "cypress open",
     "load:elastic": "bash scripts/load-elastic.sh ${ISO_FILE:-data/dk5_total.iso2709} ${FILTER:-}"
