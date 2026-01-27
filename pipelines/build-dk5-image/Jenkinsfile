@@ -22,7 +22,7 @@ pipeline {
         stage('Build Node Image') {
             agent {
                     docker {
-                    label workerNode
+                    label "devel12"
                     image "docker-dbc.artifacts.dbccloud.dk/build-env:latest"
                 alwaysPull true
             }
