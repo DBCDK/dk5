@@ -96,7 +96,9 @@ context("Testing Hierarchy", () => {
       5,
     );
     cy.get(".toggle-button").click();
-    cy.get(".selected .show .hierarchy-topics").should("not.be.visible");
+    cy.get("body")
+      .find(".selected .show .hierarchy-topics")
+      .should("not.exist");
     cy.get(".selected .hierarchy-topics .title-note:visible").should(
       "have.length.greaterThan",
       0,
