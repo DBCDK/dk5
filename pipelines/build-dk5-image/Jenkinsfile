@@ -1,5 +1,3 @@
-#!groovy​
-
 properties([
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')),
         pipelineTriggers([]),
@@ -19,7 +17,7 @@ def DOCKER_NAME_LATEST = "${DOCKER_REPO}/${CONTAINER_NAME}:latest"
 
 pipeline {
     agent {
-        label 'devel9-head'
+        label 'devel12'
     }
     stages {
         stage('Build image') {

@@ -32,8 +32,8 @@ export function getEsField(esRes, pos, fld) {
  * @returns {*}
  */
 export function getFirstElementInFieldList(esRes, pos, fldList) {
-  let field = '';
-  fldList.forEach(function(tag) {
+  let field = "";
+  fldList.forEach(function (tag) {
     const fld = getEsField(esRes, pos, tag);
     if (!field && fld[0]) {
       field = fld[0];
@@ -52,7 +52,7 @@ export function getFirstElementInFieldList(esRes, pos, fldList) {
  */
 export function setAndMap(pars, defaultParameters, esParMap) {
   let ret = {};
-  Object.keys(defaultParameters).forEach(function(key) {
+  Object.keys(defaultParameters).forEach(function (key) {
     ret[esParMap[key]] = pars[key] ? pars[key] : defaultParameters[key];
   });
   return ret;
@@ -68,11 +68,11 @@ export function setAndMap(pars, defaultParameters, esParMap) {
  */
 export function sortDistanceAndSlice(buf, elements, dist = 10) {
   return buf
-    .sort(function(a, b) {
+    .sort(function (a, b) {
       return parseInt(a.distance, 10) - parseInt(b.distance, 10);
     })
     .slice(0, elements)
-    .filter(element => element.distance <= dist);
+    .filter((element) => element.distance <= dist);
 }
 
 /**
@@ -85,8 +85,8 @@ export function sortDistanceAndSlice(buf, elements, dist = 10) {
  */
 export function mergeAndSortResults(prefix, spell, elements = 10) {
   // Set priority keys
-  prefix.map(el => (el.key = el.distance));
-  spell.map(el => (el.key = el.match.length * 2));
+  prefix.map((el) => (el.key = el.distance));
+  spell.map((el) => (el.key = el.match.length * 2));
   // Merge arrays
   let result = [...prefix, ...spell];
 
@@ -94,7 +94,7 @@ export function mergeAndSortResults(prefix, spell, elements = 10) {
     result
       // remove duplicated prefix & spells
       .filter((obj, i, arr) => {
-        return arr.map(mapObj => mapObj.match).indexOf(obj.match) === i;
+        return arr.map((mapObj) => mapObj.match).indexOf(obj.match) === i;
       })
       // Sort by key (primary) & distance (secondary)
       .sort((a, b) => {
@@ -115,7 +115,7 @@ export function mergeAndSortResults(prefix, spell, elements = 10) {
  * @returns {*}
  */
 export function indexSort(arr) {
-  return arr.sort(function(a, b) {
+  return arr.sort(function (a, b) {
     if (a.index === b.index) {
       return a.title > b.title ? 1 : -1;
     }
@@ -132,8 +132,8 @@ export function indexSort(arr) {
  */
 export function titleMatchSort(arr, query = null) {
   const normQuery =
-    (query && query.replace(/(\*|%)/, '').toLowerCase()) || null;
-  return arr.sort(function(a, b) {
+    (query && query.replace(/(\*|%)/, "").toLowerCase()) || null;
+  return arr.sort(function (a, b) {
     if (normQuery) {
       if (normQuery === a.title.toLowerCase()) {
         return -1;
@@ -153,7 +153,7 @@ export function titleMatchSort(arr, query = null) {
  * @returns {*}
  */
 export function titleSort(arr) {
-  return arr.sort(function(a, b) {
+  return arr.sort(function (a, b) {
     return a.title > b.title ? 1 : -1;
   });
 }
@@ -171,31 +171,49 @@ export function titleSort(arr) {
  */
 export function parseRegisterRecord(esRes, pos, dk5Tab, query = null) {
   const ret = {};
-  ret.title = '' + getFirstElementInFieldList(esRes, pos, ['630a', '633a', '640a', '600a', '610a', 'a20a']);
-  ret.titleDetails = getFirstElementInFieldList(esRes, pos, ['630e', '633e', '640e', '600f', '610e', 'a20b']);
-  ret.titleFull = ret.title + (ret.titleDetails ? ' - ' + ret.titleDetails : '');
-  ret.indexMain = getFirstElementInFieldList(esRes, pos, ['652m']);
-  ret.index = getFirstElementInFieldList(esRes, pos, ['652m', 'b52m', '652n']);
-  ret.decommissioned = ret.index && dk5Tab[ret.index] ? dk5Tab[ret.index].decommissioned : false;
-  ret.id = getFirstElementInFieldList(esRes, pos, ['001a']);
-  ret.noteSystematic = getFirstElementInFieldList(esRes, pos, ['a40a']);
-  ret.noteGeneral = getFirstElementInFieldList(esRes, pos, ['b00a']);
+  ret.title =
+    "" +
+    getFirstElementInFieldList(esRes, pos, [
+      "630a",
+      "633a",
+      "640a",
+      "600a",
+      "610a",
+      "a20a",
+    ]);
+  ret.titleDetails = getFirstElementInFieldList(esRes, pos, [
+    "630e",
+    "633e",
+    "640e",
+    "600f",
+    "610e",
+    "a20b",
+  ]);
+  ret.titleFull =
+    ret.title + (ret.titleDetails ? " - " + ret.titleDetails : "");
+  ret.indexMain = getFirstElementInFieldList(esRes, pos, ["652m"]);
+  ret.index = getFirstElementInFieldList(esRes, pos, ["652m", "b52m", "652n"]);
+  ret.decommissioned =
+    ret.index && dk5Tab[ret.index] ? dk5Tab[ret.index].decommissioned : false;
+  ret.id = getFirstElementInFieldList(esRes, pos, ["001a"]);
+  ret.noteSystematic = getFirstElementInFieldList(esRes, pos, ["a40a"]);
+  ret.noteGeneral = getFirstElementInFieldList(esRes, pos, ["b00a"]);
   ret.note = {
-    name: getFirstElementInFieldList(esRes, pos, ['651a']),
-    index: getFirstElementInFieldList(esRes, pos, ['651b'])
+    name: getFirstElementInFieldList(esRes, pos, ["651a"]),
+    index: getFirstElementInFieldList(esRes, pos, ["651b"]),
   };
   ret.parent = Object.assign({}, dk5Tab[ret.index]);
-  const registerWords = getEsField(esRes, pos, 'b52m');
+  const registerWords = getEsField(esRes, pos, "b52m");
   if (registerWords.length === 0) {
     return ret;
   }
-  const noteNames = getEsField(esRes, pos, 'b51a'); // ["Før ..."]
-  const noteDk5 = getEsField(esRes, pos, 'b51b'); // ["11.12"]
-  const noteRelationIndex = getEsField(esRes, pos, 'b51å'); // [2]
-  const registerWordIndex = getEsField(esRes, pos, 'b52å'); // [1, 2]
+  const noteNames = getEsField(esRes, pos, "b51a"); // ["Før ..."]
+  const noteDk5 = getEsField(esRes, pos, "b51b"); // ["11.12"]
+  const noteRelationIndex = getEsField(esRes, pos, "b51å"); // [2]
+  const registerWordIndex = getEsField(esRes, pos, "b52å"); // [1, 2]
 
-  const registerWordTitle = getEsField(esRes, pos, 'b52y');
-  const registerWordInterval = getEsField(esRes, pos, 'b52d');
+  const registerWordTitle = getEsField(esRes, pos, "b52y");
+  const registerWordInterval = getEsField(esRes, pos, "b52d");
   const items = [];
   for (let i = 0; i < registerWords.length; i++) {
     const hasNoteIndex = noteRelationIndex.indexOf(registerWordIndex[i]);
@@ -203,7 +221,7 @@ export function parseRegisterRecord(esRes, pos, dk5Tab, query = null) {
     if (hasNoteIndex >= 0) {
       note = {
         name: noteNames[hasNoteIndex],
-        index: noteDk5[hasNoteIndex]
+        index: noteDk5[hasNoteIndex],
       };
     }
     const index = registerWordInterval[i] || registerWords[i];
@@ -211,10 +229,10 @@ export function parseRegisterRecord(esRes, pos, dk5Tab, query = null) {
       index: index,
       title: registerWordTitle[i],
       parent: dk5Tab[index],
-      note
+      note,
     });
   }
-  return Object.assign({}, ret, {items: titleMatchSort(items, query)});
+  return Object.assign({}, ret, { items: titleMatchSort(items, query) });
 }
 
 /**
@@ -226,9 +244,9 @@ export function parseRegisterRecord(esRes, pos, dk5Tab, query = null) {
  * @returns {string}
  */
 export function createTaggedSystematicNote(systRec, hitPos, fld) {
-  let note = getEsField(systRec, hitPos, fld).join('<br >');
+  let note = getEsField(systRec, hitPos, fld).join("<br >");
   if (note) {
-    note = parseTextAndTagSyst(note, getEsField(systRec, hitPos, fld + 'b'));
+    note = parseTextAndTagSyst(note, getEsField(systRec, hitPos, fld + "b"));
   }
   return note;
 }
@@ -243,19 +261,19 @@ export function createTaggedSystematicNote(systRec, hitPos, fld) {
  */
 export function createTaggedRegisterNote(regRecs, hitPos, dk5Syst) {
   const note = [];
-  ['651', 'b00'].forEach(noteTag => {
-    const noteText = getEsField(regRecs, hitPos, noteTag).join('<br >');
+  ["651", "b00"].forEach((noteTag) => {
+    const noteText = getEsField(regRecs, hitPos, noteTag).join("<br >");
     if (noteText) {
       note.push(
         parseTextAndTagSyst(
           noteText,
-          getEsField(regRecs, hitPos, noteTag + 'b'),
-          dk5Syst
-        )
+          getEsField(regRecs, hitPos, noteTag + "b"),
+          dk5Syst,
+        ),
       );
     }
   });
-  return note.join('<br />');
+  return note.join("<br />");
 }
 
 /**
@@ -267,20 +285,22 @@ export function createTaggedRegisterNote(regRecs, hitPos, dk5Syst) {
  * @returns {{}}
  */
 export function parseRegisterForNotes(regRecs, dk5Syst) {
+  if (!regRecs || !Array.isArray(regRecs.hits)) {
+    return {};
+  }
   const notes = {};
   for (let hitPos = 0; hitPos < regRecs.hits.length; hitPos++) {
     const index = getFirstElementInFieldList(regRecs, hitPos, [
-      '652m',
-      '652n',
-      '652d'
+      "652m",
+      "652n",
+      "652d",
     ]);
     const note = createTaggedRegisterNote(regRecs, hitPos, dk5Syst);
     if (notes[index]) {
       if (notes[index].indexOf(note) === -1) {
-        notes[index] += '<br />' + note;
+        notes[index] += "<br />" + note;
       }
-    }
-    else {
+    } else {
       notes[index] = note;
     }
   }
@@ -294,14 +314,17 @@ export function parseRegisterForNotes(regRecs, dk5Syst) {
  * @returns {{}}
  */
 export function parseRegisterForGeneralNotes(regRecs) {
+  if (!regRecs || !Array.isArray(regRecs.hits)) {
+    return {};
+  }
   const notes = {};
   for (let hitPos = 0; hitPos < regRecs.hits.length; hitPos++) {
-    const noteText = getEsField(regRecs, hitPos, 'b00').join('<br >');
+    const noteText = getEsField(regRecs, hitPos, "b00").join("<br >");
     if (noteText) {
       const index = getFirstElementInFieldList(regRecs, hitPos, [
-        '652m',
-        '652n',
-        '652d'
+        "652m",
+        "652n",
+        "652d",
       ]);
       notes[index] = noteText;
     }
@@ -317,14 +340,17 @@ export function parseRegisterForGeneralNotes(regRecs) {
  * @returns {Array}
  */
 export function parseRegisterForUniqueWords(regRecs, wordFields) {
+  if (!regRecs || !Array.isArray(regRecs.hits)) {
+    return [];
+  }
   let uniqueWords = {};
   for (let hitPos = 0; hitPos < regRecs.hits.length; hitPos++) {
-    wordFields.forEach(fld => {
+    wordFields.forEach((fld) => {
       const wordArr = getEsField(regRecs, hitPos, fld);
       for (let i = 0; i < wordArr.length; i++) {
-        wordArr[i].split(/[\s,]+/).forEach(word => {
-          word = word.replace(/^[:\-\.#]+|[:\-\.#]+$|[\"()]+/g, ''); // eslint-disable-line no-useless-escape
-          let num = word.replace(/[\.:-]/g, ''); // eslint-disable-line no-useless-escape
+        wordArr[i].split(/[\s,]+/).forEach((word) => {
+          word = word.replace(/^[:\-\.#]+|[:\-\.#]+$|[\"()]+/g, ""); // eslint-disable-line no-useless-escape
+          let num = word.replace(/[\.:-]/g, ""); // eslint-disable-line no-useless-escape
           if (num.length > 2 && parseInt(num, 10) !== num) {
             uniqueWords[word.toLowerCase()] = true;
           }
@@ -351,10 +377,10 @@ function parseTextAndTagSyst(note, noteSyst, dk5Syst = false) {
     const p = ret.indexOf(syst, notePos);
     if (p > -1) {
       const replace =
-        !dk5Syst || dk5Syst[syst] ? '<dk>' + syst + '</dk>' : syst;
+        !dk5Syst || dk5Syst[syst] ? "<dk>" + syst + "</dk>" : syst;
       ret = ret.substr(0, p) + replace + ret.substr(p + syst.length);
       notePos = p + replace.length;
     }
   }
-  return ret.replace(' . ', '. ').replace(' , ', ', ');
+  return ret.replace(" . ", ". ").replace(" , ", ", ");
 }

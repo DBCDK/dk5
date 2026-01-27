@@ -10,18 +10,20 @@
     "dev": "npm run build:dev & . ./env.env && npm run serve",
     "lint": "eslint ./src ./cypress/integration --cache",
     "serve": "nodemon --exec node --no-stdin src/main.js",
-    "build": "webpack --define process.env.NODE_ENV='\"production\"' --progress --colors -p",
+    "serve:ci": "node -r @babel/register src/main.js",
+    "build": "NODE_ENV=production webpack --define process.env.NODE_ENV='\"production\"' --progress --colors -p",
     "build:dev": "webpack --progress --colors --watch -d",
     "precommit": "npm run lint && npm run test && npm run test:integration:local",
     "test": ". ./test.env && mocha --recursive ./src/**/*.test.js --require @babel/register",
     "start": "npm run build && npm run serve",
     "start:local": ". ./env.env && . ./test.env && npm run serve",
-    "test:integration": ". ./test.env && npm run start & npm run wait && . ./test.env && npm run cy:run",
-    "test:integration:local": "npm run start:local & npm run wait && . ./env.env && . ./test.env && npm run cy:open",
-    "test:integration:jenkins": "npm run start & npm run wait && npm run cy:run",
-    "wait": "wait-on http://localhost:4013 && wait-on http://localhost:4015",
+    "test:integration": "bash scripts/test-integration.sh",
+    "test:integration:local": "npm run build && npm run start:local & npm run wait && . ./env.env && . ./test.env && npm run cy:open",
+    "test:integration:jenkins": "bash scripts/test-integration.sh",
+    "wait": "wait-on ${HOST:-http://localhost}:${PORT:-3000} && wait-on ${HOST:-http://localhost}:${PRO_PORT:-3001}",
     "cy:run": "cypress run",
-    "cy:open": "cypress open"
+    "cy:open": "cypress open",
+    "load:elastic": "bash scripts/load-elastic.sh ${ISO_FILE:-data/dk5_total.iso2709} ${FILTER:-}"
   },
   "repository": {
     "type": "git",
@@ -36,7 +38,7 @@
     "url": "https://github.com/DBCDK/tanterne/issues"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=20.0.0"
   },
   "targets": {
     "ie": "11"
@@ -59,7 +61,7 @@
     "autoprefixer": "^9.8.6",
     "babel-loader": "^8.1.0",
     "dbc-node-logger": "^2.0.9",
-    "elasticsearch": "^16.7.1",
+    "@elastic/elasticsearch": "^8.19.1",
     "fast-levenshtein": "^3.0.0",
     "koa": "^2.13.0",
     "koa-body": "^4.2.0",
@@ -82,13 +84,13 @@
     "chai": "^4.2.0",
     "css-loader": "^4.2.0",
     "cssnano": "^4.1.10",
-    "cypress": "^4.11.0",
+    "cypress": "^13.6.2",
     "eslint": "^7.6.0",
     "eslint-plugin-react": "^7.20.5",
     "hard-source-webpack-plugin": "^0.13.1",
     "mini-css-extract-plugin": "^0.9.0",
     "mocha": "^8.1.0",
-    "node-sass": "^4.14.1",
+    "sass": "^1.69.0",
     "nodemon": "^2.0.4",
     "pa11y-ci": "^2.3.0",
     "postcss-inline-svg": "^4.1.0",

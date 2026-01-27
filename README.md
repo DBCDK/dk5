@@ -6,33 +6,41 @@
 [![devDependencies Status](https://david-dm.org/DBCDK/tanterne/dev-status.svg)](https://david-dm.org/DBCDK/tanterne?type=dev)
 
 ## Releases
-Releases are found at GitHub [/releases](https://github.com/DBCDK/tanterne/releases). Each containing a link to the changelog for the given release. A consolidated changelog for all releases is found at [CHANGELOG.md](https://github.com/DBCDK/tanterne/blob/master/CHANGELOG.md) in the project root.    
+
+Releases are found at GitHub [/releases](https://github.com/DBCDK/tanterne/releases). Each containing a link to the changelog for the given release. A consolidated changelog for all releases is found at [CHANGELOG.md](https://github.com/DBCDK/tanterne/blob/master/CHANGELOG.md) in the project root.  
 The changelog is made with [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator) and can be created with the command `github_changelog_generator -u DBCDK -p tanterne` -- you may need a valid GitHub token to run the command.
 
 ## Installation
+
 ### Elastic Search
+
 Download Elastic Search, like: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz
 
 Install and start it
 
 ### Get data
+
 Records are dumped from cisterne with rrdump like:
 
 `rrdump -m EXPANDED -f ISO -a 190007 -e UTF-8 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o dk5_total_iso2709`
 
 ### rrdump
-* https://github.com/DBCDK/rawrepo-dump-tool
+
+- https://github.com/DBCDK/rawrepo-dump-tool
 
 ### Convert
-* `iso2709ToElasticLoad -i dk5_total.iso2709 -o elastic_bulk_load.json`
+
+- `iso2709ToElasticLoad -i dk5_total.iso2709 -o elastic_bulk_load.json`
 
 Filter only one dk5 group like (for develop/test/debug purposes only)
-* `iso2709ToElasticLoad -f 13 -i dk5_total.iso2709 -o elastic_bulk_load.json`
+
+- `iso2709ToElasticLoad -f 13 -i dk5_total.iso2709 -o elastic_bulk_load.json`
 
 ### Load Elastic Search
-* `SERVER=localhost:9200`
-* `curl -XDELETE "${SERVER}/*" -H 'Content-Type: application/json'`
-* `curl -XPUT "${SERVER}/systematic" -H 'Content-Type: application/json' -d '{
+
+- `SERVER=localhost:9200`
+- `curl -XDELETE "${SERVER}/*" -H 'Content-Type: application/json'`
+- `curl -XPUT "${SERVER}/systematic" -H 'Content-Type: application/json' -d '{
   "mappings":{
     "dk5":{
       "properties":{ 
@@ -41,12 +49,10 @@ Filter only one dk5 group like (for develop/test/debug purposes only)
         } 
       } 
     } 
-  }, 
   "settings": { 
-    "number_of_shards": 1 
   }
 }'`
-* `curl -XPUT "${SERVER}/register" -H 'Content-Type: application/json' -d '{
+- `curl -XPUT "${SERVER}/register" -H 'Content-Type: application/json' -d '{
   "settings":{
     "analysis":{
       "char_filter":{
@@ -67,20 +73,108 @@ Filter only one dk5 group like (for develop/test/debug purposes only)
     "number_of_shards": 1
   }
 }'`
-* `curl -XPOST "${SERVER}/_bulk?refresh=wait_for" -H 'Content-Type: application/json' --data-binary '@elastic_bulk_load.json'`
-* `curl -XPUT "${SERVER}/*/_settings" -H 'Content-Type: application/json' -d '{
+- `curl -XPOST "${SERVER}/_bulk?refresh=wait_for" -H 'Content-Type: application/json' --data-binary '@elastic_bulk_load.json'`
+- `curl -XPUT "${SERVER}/*/_settings" -H 'Content-Type: application/json' -d '{
   "index": {
     "max_result_window": 50000
   }
 }'`
- 
+
+2. Start services:
+
+```bash
+docker compose up -d elasticsearch
+```
+
+3. Convert and load (full dataset):
+
+```bash
+scripts/load-elastic.sh data/dk5_total.iso2709
+```
+
+For a filtered (single group) load, add the group prefix (e.g. `13`):
+
+```bash
+scripts/load-elastic.sh data/dk5_total.iso2709 13
+```
+
+4. Start the application (if not already):
+
+```bash
+docker compose up -d dk5-app
+```
+
+5. Verify counts:
+
+```bash
+curl -s localhost:9200/systematic/_count
+curl -s localhost:9200/register/_count
+```
+
+Note: In Docker the app uses `ELASTIC_HOST=elasticsearch:9200` (no protocol) for the internal network. For host curl commands use `localhost:9200`.
+
+To rebuild everything from scratch (purging data volume):
+
+```bash
+docker compose down -v
+docker compose up -d elasticsearch
+scripts/load-elastic.sh data/dk5_total.iso2709
+docker compose up -d dk5-app
+```
+
+### Data Volume & ISO2709 Source
+
+The Docker services mount the host folder `./data` into the containers at `/data`:
+
+- In `docker-compose.yml` both `elasticsearch`, `dk5-app`, and `es-init` use `- ./data:/data`.
+- The `es-init` service looks specifically for `/data/dk5_total.iso2709`. If that file exists and `/data/.es_loaded` does not, it converts and loads it.
+
+You are responsible for providing the source ISO2709 dump. Typical workflow:
+
+1. Obtain records with `rrdump` (requires network access to the rawrepo service and any needed auth):
+
+```bash
+rrdump -m EXPANDED -f ISO -a 190007 -e UTF-8 -u http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk -o dk5_total.iso2709
+```
+
+2. Place the file into the project data folder:
+
+```bash
+mv dk5_total.iso2709 data/dk5_total.iso2709
+```
+
+3. Start or rebuild the stack. `es-init` will detect and load:
+
+```bash
+docker compose up --build dk5-app
+```
+
+4. On success a marker file `/data/.es_loaded` is created to avoid reloading. To force a reload:
+
+```bash
+rm data/.es_loaded
+docker compose up --build es-init
+```
+
+Filtered / smaller dataset (e.g. group `13`): run conversion manually first:
+
+```bash
+docker compose run --rm dk5-app node src/iso2709ToElasticLoad -f 13 -i /data/dk5_total.iso2709 -o /data/elastic_bulk_load.json
+```
+
+Then load using `scripts/load-elastic.sh` or by adapting `es-init` command.
+
+If you do not have access to the original rawrepo endpoint, you can still test the pipeline by crafting a tiny ISO2709 file containing a few DK5 records and placing it in `data/`.
+
 ## Development
+
 After cloning the repository, run `npm install` to install dependencies. Copy test.env to env.env and set the environment variables (see below) to you need/liking. The application is started with `npm run dev`, which include [nodemon](https://www.npmjs.com/package/nodemon) in order to restart the application, when the code is changed.
 
 When started, the application will spawn two versions of the user interface: pro and non-pro. The pro version contains a more advanced featureset targeted professional users, while the non-pro version is targeted endusers on the libraries and therefore exposes a more limited and focussed featureset.
 The two versions will be available on the ports specified as environment variables. See [Environment variables](https://github.com/DBCDK/tanterne#environment-variables) for more info.
 
 ## Build and deploy
+
 In pipelines buildjobs for the dk5 image, and build, dump and convert dk5-data is found.
 
 Deploy jobs is found in DBC gitlab: dk5-deploy
@@ -92,34 +186,35 @@ Dataload for staging and prod is found in DBC gitlab: dk5-dataload
 The variables are specified at the form `name : internal config object`. References in the log from the startup, will use the internal config object.
 
 - `APP_NAME` : `app.name`  
-Default: `no name`
+  Default: `no name`
 
 - `ELASTIC_HOST` : `elastic.host`  
-host and port, like localhost:9200
+  host and port, like localhost:9200
 
 - `ELASTIC_LOG` : `elastic.log`  
-Set Elastic Search log level (trace, warning, error). default: error, warning
+  Set Elastic Search log level (trace, warning, error). default: error, warning
 
 - `LOG_LEVEL` : `log.level`  
-Specifies the log level used by the application. Defaults to `INFO`
-Log level constants supported:: `OFF` (0), `ERROR` (1), `WARN` (2), `WARNING` (2), `INFO` (3), `DEBUG` (4), `TRACE` (5)
+  Specifies the log level used by the application. Defaults to `INFO`
+  Log level constants supported:: `OFF` (0), `ERROR` (1), `WARN` (2), `WARNING` (2), `INFO` (3), `DEBUG` (4), `TRACE` (5)
 
 - `NEWRELIC_LICENSE_KEY` : not validated  
-When given a valid license key the applicaion will report to New Relic and idetify itself as `Tanterne - DK5`. The given value in `NEWRELIC_LICENSE_KEY` is not not validated but if an invalid license key is given, the New Relic deamon wont start which happens silenty. 
+  When given a valid license key the applicaion will report to New Relic and idetify itself as `Tanterne - DK5`. The given value in `NEWRELIC_LICENSE_KEY` is not not validated but if an invalid license key is given, the New Relic deamon wont start which happens silenty.
 
 - `NODE_ENV` : `app.env`  
-When run in production the `NODE_ENV` should be set to `production`: `NODE_ENV=production`
+  When run in production the `NODE_ENV` should be set to `production`: `NODE_ENV=production`
 
 - `PORT` : `app.port`  
-Specifies the port to expose the application.
+  Specifies the port to expose the application.
 
 - `PRO_PORT` : `pro.port`  
-Specifies the port to expose the pro-version of the application.
- 
+  Specifies the port to expose the pro-version of the application.
+
 - `PRETTY_LOG` : `log.pretty`  
-Set to `1` (`PRETTY_LOG=1`) for pretty printed log statements. Any other setting, will result in one-line log statements.
+  Set to `1` (`PRETTY_LOG=1`) for pretty printed log statements. Any other setting, will result in one-line log statements.
 
 # Documentation
+
 ## Endpoints
 
 - `/api/hierarchy/?q=india`
@@ -130,5 +225,6 @@ Set to `1` (`PRETTY_LOG=1`) for pretty printed log statements. Any other setting
 
 - `/api/suggest/?q=india`
 
-# Architecture 
+# Architecture
+
 See [architecture.jpg](docs/architecture.jpg)
