@@ -17,7 +17,7 @@ RUN npm set progress=false && npm config set depth 0 && \
     npm install --legacy-peer-deps && \
     npm run build
     
-FROM node:22-alpine AS release
+FROM node:24-alpine AS release
 ENV NODE_OPTIONS=--openssl-legacy-provider
 ENV BABEL_CACHE_PATH=~/app/babel.cache.json
 WORKDIR /home/node/app
