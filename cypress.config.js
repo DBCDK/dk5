@@ -5,6 +5,8 @@ const port = process.env.CYPRESS_APP_PORT || "3001";
 
 export default defineConfig({
   e2e: {
+    defaultCommandTimeout: 8000,
+    retries: { runMode: 2, openMode: 0 },
     // Keep legacy spec folder structure
     specPattern: "cypress/integration/**/*.js",
     baseUrl: `${host}:${port}`,

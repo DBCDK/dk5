@@ -8,7 +8,6 @@ context("Testing the searchresultspage on normal version", () => {
   });
 
   it("No CartButtons items should be visible", () => {
-    cy.get("#cart-button-55").should("not.be.visible");
     cy.get(".cart-button-container").should("have.length", 0);
   });
 

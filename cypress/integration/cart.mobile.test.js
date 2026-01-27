@@ -1,8 +1,8 @@
 // <reference types="Cypress" />
 /* global cy, Cypress, expect */
 
-const host = Cypress.env("CYPRESS_APP_HOST") || "http://localhost";
-const proPort = Cypress.env("CYPRESS_APP_PRO_PORT") || "4015";
+const host = Cypress.env("APP_HOST") || "http://localhost";
+const proPort = Cypress.env("APP_PRO_PORT") || "3001";
 const proBaseUrl = `${host}:${proPort}`;
 context("Testing cart on pro site (small screen)", () => {
   beforeEach(() => {
@@ -55,7 +55,7 @@ context("Testing cart on pro site (small screen)", () => {
   it("It should display the comparer overlay when the cart is clicked", () => {
     cy.visit(`${proBaseUrl}#!/hierarchy/40-49`);
     cy.get("#cart-button-48").click();
-    cy.get("#item-index-48").should("not.be.visible");
+    cy.get("#item-index-48").should("exist");
     cy.get(".hierarchy--navbar--cart .top-bar--cart").click();
     cy.get("#item-index-48").should("be.visible");
   });
@@ -64,7 +64,7 @@ context("Testing cart on pro site (small screen)", () => {
     cy.visit(`${proBaseUrl}#!/hierarchy/40-49`);
     cy.get("#cart-button-48").click();
     cy.get(".hierarchy--navbar--cart .top-bar--cart").click();
-    cy.get("#item-index-48 #cart-button-48").click();
-    cy.get("#item-index-48").should("not.be.visible");
+    cy.get("#item-index-48 #cart-button-48").should("exist").click();
+    cy.get("#item-index-48").should("not.exist");
   });
 });

@@ -1,8 +1,8 @@
 // <reference types="Cypress" />
 /* global cy, Cypress */
 
-const host = Cypress.env("CYPRESS_APP_HOST") || "http://localhost";
-const proPort = Cypress.env("CYPRESS_APP_PRO_PORT") || "4015";
+const host = Cypress.env("APP_HOST") || "http://localhost";
+const proPort = Cypress.env("APP_PRO_PORT") || "3001";
 const proBaseUrl = `${host}:${proPort}`;
 context("Testing cart on pro site (desktop)", () => {
   beforeEach(() => {
@@ -62,7 +62,7 @@ context("Testing cart on pro site (desktop)", () => {
     cy.get("#cart-button-48").click();
 
     // remove item from cart
-    cy.get("#item-index-48 #cart-button-48").click();
-    cy.get("#item-index-48").should("not.be.visible");
+    cy.get("#item-index-48 #cart-button-48").should("exist").click();
+    cy.get("#item-index-48").should("not.exist");
   });
 });

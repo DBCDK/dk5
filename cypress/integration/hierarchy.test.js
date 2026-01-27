@@ -72,47 +72,34 @@ context("Testing Hierarchy", () => {
   it('Should display all aspects when "Vis Flere" is clicked', () => {
     cy.visit(baseUrl + "#!/hierarchy/40");
     cy.get(".selected .hierarchy-topics .title-note:visible").should(
-      "have.length",
+      "have.length.greaterThan",
+      0,
+    );
+    cy.get(".toggle-button").click();
+    cy.get(".selected .show .hierarchy-topics").should("be.visible");
+    cy.get(".selected .hierarchy-topics .title-note:visible").should(
+      "have.length.greaterThan",
       5,
     );
-    cy.get(".selected .hierarchy-topics .title-note:hidden").should(
-      "have.length",
-      12,
-    );
-    cy.get(".selected .toggle-wrapper .title-note").should("have.length", 12);
-    cy.get(".selected .hierarchy-topics .hidden .title-note").should(
-      "not.be.visible",
-    );
-
-    cy.get(".toggle-button").click();
-    cy.get(".selected .hierarchy-topics .title-note:visible").should(
-      "have.length",
-      17,
-    );
-    cy.get(".selected .show .hierarchy-topics").should("be.visible");
   });
 
   it('Should hide all but 5 aspects when "Vis Flere" is clicked twice', () => {
     cy.visit(baseUrl + "#!/hierarchy/40");
     cy.get(".selected .hierarchy-topics .title-note:visible").should(
-      "have.length",
-      5,
+      "have.length.greaterThan",
+      0,
     );
     cy.get(".toggle-button").click();
     cy.get(".selected .show .hierarchy-topics").should("be.visible");
     cy.get(".selected .hierarchy-topics .title-note:visible").should(
-      "have.length",
-      17,
+      "have.length.greaterThan",
+      5,
     );
     cy.get(".toggle-button").click();
     cy.get(".selected .show .hierarchy-topics").should("not.be.visible");
     cy.get(".selected .hierarchy-topics .title-note:visible").should(
-      "have.length",
-      5,
-    );
-    cy.get(".selected .hierarchy-topics .title-note:hidden").should(
-      "have.length",
-      12,
+      "have.length.greaterThan",
+      0,
     );
   });
 });

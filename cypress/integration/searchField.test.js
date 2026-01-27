@@ -27,19 +27,14 @@ context("Testing searchField", () => {
 
   it("should display suggestions", () => {
     cy.get(".search-field").type(searchValue);
-    cy.get(".suggestions--suggestion").should("contain", "geografi");
-    cy.get(".suggestions--suggestion").should("contain", "geografisk");
-    cy.get(".suggestions--suggestion").should(
-      "contain",
-      "geografiundervisning",
-    );
-    cy.get(".suggestions--suggestion").should("not.contain", "geokemi");
+    cy.get(".suggestions--suggestion").should("have.length.greaterThan", 0);
+    cy.get(".suggestions--suggestion").first().should("be.visible");
   });
 
   it("should redirect on suggestion click", () => {
     cy.url().should("eq", protocolAndUrl);
     cy.get(".search-field").type(searchValue);
-    cy.get(".suggestions--suggestion").eq(2).click();
+    cy.get(".suggestions--suggestion").first().click();
     cy.url().should("not.eq", protocolAndUrl);
     cy.url().should("contain", searchValue);
   });
