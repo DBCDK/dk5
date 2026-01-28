@@ -24,6 +24,8 @@ pipeline {
         }
     }
     triggers {
+        // Also build on SCM changes (fallback if webhooks aren’t configured)
+        pollSCM('H/5 * * * *')
         upstream(upstreamProjects: "/dk5/dk5-dump-broend-data/master",
                 threshold: hudson.model.Result.SUCCESS)
     }
@@ -46,8 +48,8 @@ pipeline {
                         cp ${OUTPUTFILE} ${OUTPUTFILE_ES5}
                         cp ${OUTPUTFILE} ${OUTPUTFILE_ALIAS}
                         # Validate ES5 typed bulk: every action line must include "_type"
-                        MISSING_TYPE=$(awk 'NR%2==1' ${OUTPUTFILE} | grep -vc '"_type"' || true)
-                        if [ "$MISSING_TYPE" -ne 0 ]; then
+                                                MISSING_TYPE=\$(awk 'NR%2==1' ${OUTPUTFILE} | grep -vc '\"_type\"' || true)
+                                                if [ "\$MISSING_TYPE" -ne 0 ]; then
                           echo "ERROR: ${OUTPUTFILE} has $MISSING_TYPE action lines without _type (expected ES5 typed bulk)." >&2
                           exit 1
                         fi
