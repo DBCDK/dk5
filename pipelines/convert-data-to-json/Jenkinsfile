@@ -31,6 +31,7 @@ pipeline {
     }
     environment {
         ARTIFACTORY_DK5_DATA = "https://artifactory.dbccloud.dk/artifactory/docker-fbiscrum/dk5-data/"
+        ARTIFACTORY_DK5_DATA_DEV = "https://artifactory.dbccloud.dk/artifactory/docker-fbiscrum-dev/dk5-data/"
         ARTIFACTORY_LOGIN = credentials("artifactory_login")
         TANTER_LOGIN = credentials("tanter_login")
     }
@@ -69,6 +70,13 @@ pipeline {
                         curl -k -u "${ARTIFACTORY_LOGIN}" -T "${OUTPUTFILE_ES5}" "${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ES5}"
                         echo "push to ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ALIAS}"
                         curl -k -u "${ARTIFACTORY_LOGIN}" -T "${OUTPUTFILE_ALIAS}" "${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ALIAS}"
+
+                        echo "push to ${ARTIFACTORY_DK5_DATA_DEV}${OUTPUTFILE}"
+                        curl -k -u "${ARTIFACTORY_LOGIN}" -T "${OUTPUTFILE}" "${ARTIFACTORY_DK5_DATA_DEV}${OUTPUTFILE}"
+                        echo "push to ${ARTIFACTORY_DK5_DATA_DEV}${OUTPUTFILE_ES5}"
+                        curl -k -u "${ARTIFACTORY_LOGIN}" -T "${OUTPUTFILE_ES5}" "${ARTIFACTORY_DK5_DATA_DEV}${OUTPUTFILE_ES5}"
+                        echo "push to ${ARTIFACTORY_DK5_DATA_DEV}${OUTPUTFILE_ALIAS}"
+                        curl -k -u "${ARTIFACTORY_LOGIN}" -T "${OUTPUTFILE_ALIAS}" "${ARTIFACTORY_DK5_DATA_DEV}${OUTPUTFILE_ALIAS}"
                     '''
                 }
             }
