@@ -181,6 +181,19 @@ Deploy jobs is found in DBC gitlab: dk5-deploy
 
 Dataload for staging and prod is found in DBC gitlab: dk5-dataload
 
+### Elasticsearch Bulk Format (ES5 vs ES8)
+
+- Generator: `src/iso2709ToElasticLoad` supports both ES8 (typeless) and ES5 (typed) bulk formats.
+- Switch with `-V`:
+  - ES8 (default): `node src/iso2709ToElasticLoad -i <in.iso2709> -o <out.json>`
+  - ES5: `node src/iso2709ToElasticLoad -V 5 -i <in.iso2709> -o <out.json>`
+- Pipelines:
+  - `build-dk5-image`: unchanged; default ES8 behavior is retained within the image/app.
+  - `convert-data-to-json`: generates ES5 bulk by invoking `-V 5` and publishes `elastic_bulk_load.<branch>.json` to Artifactory. A secondary, explicitly named `.es5.json` artifact may also be published when configured.
+- Loader hints:
+  - ES5 clusters require typed mappings and bulk action lines with `_type`.
+  - ES8 clusters require typeless mappings (no `_type`).
+
 ## Environment variables
 
 The variables are specified at the form `name : internal config object`. References in the log from the startup, will use the internal config object.
