@@ -16,7 +16,7 @@ pipeline {
     agent {
         docker {
             image "${DOCKER_REPO}/dbc-broend-env:latest"
-            label 'devel10-head'
+            label 'devel12'
         }
     }
     triggers {
