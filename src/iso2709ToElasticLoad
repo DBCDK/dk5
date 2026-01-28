@@ -39,6 +39,7 @@ const US = String.fromCharCode(0x1f); // subfield separator
 // ES8: remove deprecated _type from bulk action metadata
 const indexRec = { index: { _index: "dk5", _id: 0 } };
 const option = getOptions();
+const esVersion = String(option.version || "8");
 
 const records = fs.readFileSync(option.input, "utf8").split(GS);
 const progress = new stdio.ProgressBar(records.length);
@@ -70,7 +71,31 @@ info.forEach(function (line) {
   console.log(line);
 });
 
-console.log(`\nStart Elastic Search and load data like (ES8 syntax):
+if (esVersion === "5") {
+  console.log(`\nStart Elasticsearch 5.6 load (typed mappings):
+  SERVER=dk5www-p01:9200
+  curl -XDELETE "$SERVER/systematic" || true
+  curl -XDELETE "$SERVER/register" || true
+  curl -XPUT "$SERVER/systematic" -H 'Content-Type: application/json' -d '{
+    "mappings": { "dk5": { "properties": { "parent": { "enabled": false } } } },
+    "settings": { "number_of_shards": 1 }
+  }'
+  curl -XPUT "$SERVER/register" -H 'Content-Type: application/json' -d '{
+    "mappings": { "dk5": { "properties": {} } },
+    "settings": {
+      "analysis": {
+        "char_filter": { "dk5": { "type": "mapping", "mappings": [":=>kolon"] } },
+        "analyzer": { "default": { "type": "custom", "char_filter": ["dk5"], "tokenizer": "standard", "filter": ["lowercase"] } }
+      },
+      "number_of_shards": 1
+    }
+  }'
+  curl -XPOST "$SERVER/_bulk?refresh=wait_for" -H 'Content-Type: application/json' --data-binary '@${option.output}'
+  curl -XPUT "$SERVER/systematic/_settings" -H 'Content-Type: application/json' -d '{"index":{"max_result_window":50000}}'
+  curl -XPUT "$SERVER/register/_settings" -H 'Content-Type: application/json' -d '{"index":{"max_result_window":50000}}'
+`);
+} else {
+  console.log(`\nStart Elastic Search and load data like (ES8 syntax):
   SERVER=localhost:9200
   curl -XDELETE "$SERVER/systematic" || true
   curl -XDELETE "$SERVER/register" || true
@@ -80,6 +105,7 @@ console.log(`\nStart Elastic Search and load data like (ES8 syntax):
   curl -XPUT "$SERVER/systematic/_settings" -H 'Content-Type: application/json' -d '{"index":{"max_result_window":50000}}'
   curl -XPUT "$SERVER/register/_settings" -H 'Content-Type: application/json' -d '{"index":{"max_result_window":50000}}'
 `);
+}
 process.exit(0);
 
 /* ------------------------------------------------------------------------------------------------------------------------------ */
@@ -94,6 +120,12 @@ function getOptions() {
     input: { key: "i", args: 1, description: "Input file" },
     output: { key: "o", args: 1, description: "Output file" },
     filter: { key: "f", args: "*", description: "filter dk5 group" },
+    version: {
+      key: "V",
+      args: 1,
+      description:
+        "Elasticsearch major version for bulk format (5 or 8). Default: 8",
+    },
   });
   if (!ops.input || !ops.output) {
     ops.printHelp();
@@ -115,8 +147,8 @@ function createDk5Tab() {
     const number = Array.isArray(dk5["652m"])
       ? dk5["652m"][0]
       : Array.isArray(dk5["652n"])
-      ? dk5["652n"][0]
-      : "";
+        ? dk5["652n"][0]
+        : "";
     if (bibKat === "DK5") {
       // only for systematic
       const text = Array.isArray(dk5["652u"]) ? dk5["652u"][0] : "";
@@ -160,6 +192,12 @@ function dumpRecords() {
     NUL: { index: "ignored", no: 0 },
   };
   let recno = 0;
+  function makeIndexAction(idx, id) {
+    if (esVersion === "5") {
+      return { index: { _index: idx, _type: "dk5", _id: id } };
+    }
+    return { index: { _index: idx, _id: id } };
+  }
   dk5Buf.forEach(function (dk5) {
     if (dk5["004r"] && dk5["004r"][0] === "d") {
       deleted++;
@@ -189,18 +227,16 @@ function dumpRecords() {
           (dk5["652d"] && topGroup.indexOf(dk5["652d"][0]) > -1)
         ) {
           bibKatMap["REK"].no++;
-          indexRec.index._id = recno++;
-          indexRec.index._index = "register";
-          writeRecord(JSON.stringify(indexRec));
+          const actionMissing = makeIndexAction("register", recno++);
+          writeRecord(JSON.stringify(actionMissing));
           writeRecord(JSON.stringify(dk5));
         }
       }
       let index = bibKatMap[bibKat].index;
       bibKatMap[bibKat].no++;
-      indexRec.index._id = recno++;
-      indexRec.index._index = index;
+      const action = makeIndexAction(index, recno++);
       if (!filter || (number && filter === number.substr(0, filter.length))) {
-        writeRecord(JSON.stringify(indexRec));
+        writeRecord(JSON.stringify(action));
         writeRecord(JSON.stringify(dk5));
       }
     }

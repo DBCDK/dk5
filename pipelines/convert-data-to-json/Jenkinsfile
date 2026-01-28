@@ -12,6 +12,8 @@ properties([
 def BRANCH = BRANCH_NAME.toLowerCase().replaceAll(/[\/._ ]/, "-")
 def INPUTFILE = "dk5_total.${BRANCH}.iso2709"
 def OUTPUTFILE = "elastic_bulk_load.${BRANCH}.json"
+def OUTPUTFILE_ES5 = "elastic_bulk_load.${BRANCH}.es5.json"
+def OUTPUTFILE_ALIAS = "elastic_bulk_load.json" // legacy name used by old pods
 
 pipeline {
     agent {
@@ -40,7 +42,15 @@ pipeline {
                         npm --version
                         node --version
                         npm install
-                        src/iso2709ToElasticLoad -i ${INPUTFILE} -o ${OUTPUTFILE}
+                        src/iso2709ToElasticLoad -V 5 -i ${INPUTFILE} -o ${OUTPUTFILE}
+                        cp ${OUTPUTFILE} ${OUTPUTFILE_ES5}
+                        cp ${OUTPUTFILE} ${OUTPUTFILE_ALIAS}
+                        # Validate ES5 typed bulk: every action line must include "_type"
+                        MISSING_TYPE=$(awk 'NR%2==1' ${OUTPUTFILE} | grep -vc '"_type"' || true)
+                        if [ "$MISSING_TYPE" -ne 0 ]; then
+                          echo "ERROR: ${OUTPUTFILE} has $MISSING_TYPE action lines without _type (expected ES5 typed bulk)." >&2
+                          exit 1
+                        fi
                     """
                 }
             }
@@ -48,10 +58,14 @@ pipeline {
         stage('Send file to Artifactory') {
             steps {
                 script {
-                    sh "echo archive ${OUTPUTFILE}"
-                    archiveArtifacts "${OUTPUTFILE}"
+                    sh "echo archive ${OUTPUTFILE}, ${OUTPUTFILE_ES5} and ${OUTPUTFILE_ALIAS}"
+                    archiveArtifacts "${OUTPUTFILE}, ${OUTPUTFILE_ES5}, ${OUTPUTFILE_ALIAS}"
                     sh "echo push to ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE}"
                     sh "curl -k -u ${ARTIFACTORY_LOGIN} -T ${OUTPUTFILE} ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE}"
+                    sh "echo push to ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ES5}"
+                    sh "curl -k -u ${ARTIFACTORY_LOGIN} -T ${OUTPUTFILE_ES5} ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ES5}"
+                    sh "echo push to ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ALIAS} (legacy alias)"
+                    sh "curl -k -u ${ARTIFACTORY_LOGIN} -T ${OUTPUTFILE_ALIAS} ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ALIAS}"
                 }
             }
         }
