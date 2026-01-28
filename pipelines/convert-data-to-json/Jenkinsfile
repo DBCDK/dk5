@@ -62,12 +62,14 @@ pipeline {
                 script {
                     sh "echo archive ${OUTPUTFILE}, ${OUTPUTFILE_ES5} and ${OUTPUTFILE_ALIAS}"
                     archiveArtifacts "${OUTPUTFILE}, ${OUTPUTFILE_ES5}, ${OUTPUTFILE_ALIAS}"
-                    sh "echo push to ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE}"
-                    sh "curl -k -u ${ARTIFACTORY_LOGIN} -T ${OUTPUTFILE} ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE}"
-                    sh "echo push to ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ES5}"
-                    sh "curl -k -u ${ARTIFACTORY_LOGIN} -T ${OUTPUTFILE_ES5} ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ES5}"
-                    sh "echo push to ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ALIAS} (legacy alias)"
-                    sh "curl -k -u ${ARTIFACTORY_LOGIN} -T ${OUTPUTFILE_ALIAS} ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ALIAS}"
+                    sh '''
+                        echo "push to ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE}"
+                        curl -k -u "${ARTIFACTORY_LOGIN}" -T "${OUTPUTFILE}" "${ARTIFACTORY_DK5_DATA}${OUTPUTFILE}"
+                        echo "push to ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ES5}"
+                        curl -k -u "${ARTIFACTORY_LOGIN}" -T "${OUTPUTFILE_ES5}" "${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ES5}"
+                        echo "push to ${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ALIAS}"
+                        curl -k -u "${ARTIFACTORY_LOGIN}" -T "${OUTPUTFILE_ALIAS}" "${ARTIFACTORY_DK5_DATA}${OUTPUTFILE_ALIAS}"
+                    '''
                 }
             }
         }
